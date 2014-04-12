@@ -9,7 +9,7 @@
 #import "AppDelegate.h"
 
 const static int sMaxTextChunkLength = 60;
-const static int sPebbleStorageCapacity = 140000;	// 140KB
+const static int sPebbleStorageCapacity = 50000;	// 50KB
 
 @interface AppDelegate () <PBPebbleCentralDelegate>
 
@@ -114,7 +114,7 @@ const static int sPebbleStorageCapacity = 140000;	// 140KB
 	for (int i = 0; i < [text lengthOfBytesUsingEncoding:NSUnicodeStringEncoding];) {
 		NSRange range;
 		range.location = i;
-		range.length = MAX((i += sMaxTextChunkLength), [text length]);
+		range.length = MIN((i += sMaxTextChunkLength), [text length]);
 		NSString *chunk = [text substringWithRange:range];
 		[chunks addObject:chunk];
 	}

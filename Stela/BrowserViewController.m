@@ -7,6 +7,7 @@
 //
 
 #import "BrowserViewController.h"
+#import "AppDelegate.h"
 
 static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
@@ -27,6 +28,7 @@ static const CGFloat kAddressHeight = 24.0f;
 @property (strong, nonatomic) UILabel *pageTitle;
 @property (strong, nonatomic) UITextField *addressField;
 
+- (NSString*)getParsedText;	// Injects JavaScript
 - (void)loadRequestFromString:(NSString*)urlString;
 - (void)updateButtons;
 - (void)loadRequestFromAddressField:(id)addressField;
@@ -36,22 +38,11 @@ static const CGFloat kAddressHeight = 24.0f;
 
 @implementation BrowserViewController
 
-/*
- - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-*/
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 	self.webView.delegate = self;
-    [self loadRequestFromString:@"https://www.google.com"];
+	self.webView.scalesPageToFit = YES;
 	/* Create the page title label */
 	UINavigationBar *navBar = self.navigationController.navigationBar;
 	CGRect labelFrame = CGRectMake(kMargin, kSpacer, navBar.bounds.size.width - 2*kMargin, kLabelHeight);
@@ -65,6 +56,9 @@ static const CGFloat kAddressHeight = 24.0f;
 	/* Create the address bar */
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer*2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
+	address.text = @"http://www.gizoogle.net";
+	[address setAutocapitalizationType:UITextAutocapitalizationTypeNone];
+	[address setAutocorrectionType:UITextAutocorrectionTypeNo];
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	address.borderStyle = UITextBorderStyleRoundedRect;
 	address.font = [UIFont systemFontOfSize:17];
@@ -73,24 +67,24 @@ static const CGFloat kAddressHeight = 24.0f;
 	  forControlEvents:UIControlEventEditingDidEndOnExit];
 	[navBar addSubview:address];
 	self.addressField = address;
+
+    [self loadRequestFromString:self.addressField.text];
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (NSString*)getParsedText {
+	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
+	NSError *__autoreleasing *error = nil;
+	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:nil];
+	if (error == nil) {
+		NSLog(@"Loaded js successfully");
+		js = [NSString stringWithFormat:js, [NSString stringWithFormat:@"\"%@\"", self.addressField.text]];
+		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:js];
+		return parsedText;
+	} else {
+		NSLog(@"Error loading js");
+		return @"";
+	}
 }
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
-{
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 - (void)loadRequestFromString:(NSString *)urlString {
 	NSURL *url = [NSURL URLWithString:urlString];
@@ -115,7 +109,8 @@ static const CGFloat kAddressHeight = 24.0f;
 }
 
 - (IBAction)sendToPebble:(id)sender {
-	//TODO
+	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+	[appDelegate pushString:[self getParsedText] toWatch:appDelegate.connectedWatch];
 }
 
 

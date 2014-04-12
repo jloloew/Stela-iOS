@@ -31,6 +31,8 @@
 		B81DA2F118F8C6F300C49C21 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2EE18F8C6F300C49C21 /* CoreMotion.framework */; };
 		B81DA2F318F8C6FD00C49C21 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2F218F8C6FD00C49C21 /* MessageUI.framework */; };
 		B86E1B2C18F8C84800FAD644 /* BrowserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B86E1B2B18F8C84800FAD644 /* BrowserViewController.m */; };
+		B86E1B2E18F9007500FAD644 /* ArticlePull.js in Sources */ = {isa = PBXBuildFile; fileRef = B86E1B2D18F9007500FAD644 /* ArticlePull.js */; };
+		B86E1B2F18F90BAA00FAD644 /* ArticlePull.js in Resources */ = {isa = PBXBuildFile; fileRef = B86E1B2D18F9007500FAD644 /* ArticlePull.js */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +76,7 @@
 		B81DA2F218F8C6FD00C49C21 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		B86E1B2A18F8C84800FAD644 /* BrowserViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrowserViewController.h; sourceTree = "<group>"; };
 		B86E1B2B18F8C84800FAD644 /* BrowserViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BrowserViewController.m; sourceTree = "<group>"; };
+		B86E1B2D18F9007500FAD644 /* ArticlePull.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = ArticlePull.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,6 +169,7 @@
 		B81DA2B318F8C61800C49C21 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				B86E1B2D18F9007500FAD644 /* ArticlePull.js */,
 				B81DA2B418F8C61800C49C21 /* Stela-Info.plist */,
 				B81DA2B518F8C61800C49C21 /* InfoPlist.strings */,
 				B81DA2B818F8C61800C49C21 /* main.m */,
@@ -271,6 +275,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B86E1B2F18F90BAA00FAD644 /* ArticlePull.js in Resources */,
 				B81DA2C318F8C61800C49C21 /* Main_iPad.storyboard in Resources */,
 				B81DA2C818F8C61800C49C21 /* Images.xcassets in Resources */,
 				B81DA2C018F8C61800C49C21 /* Main_iPhone.storyboard in Resources */,
@@ -294,6 +299,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B81DA2C618F8C61800C49C21 /* ViewController.m in Sources */,
+				B86E1B2E18F9007500FAD644 /* ArticlePull.js in Sources */,
 				B86E1B2C18F8C84800FAD644 /* BrowserViewController.m in Sources */,
 				B81DA2BD18F8C61800C49C21 /* AppDelegate.m in Sources */,
 				B81DA2B918F8C61800C49C21 /* main.m in Sources */,
