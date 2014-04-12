@@ -118,14 +118,6 @@ static const CGFloat kAddressHeight = 24.0f;
 	}
 }
 
-/*
-- (NSString*)getParsedText {
-//	UIWebView *wview = [[UIWebView alloc] init];
-//	wview.hidden = YES;
-	[self.webView stringByEvaluatingJavaScriptFromString:js];
-}
-*/
-
 #pragma mark Browser Stuff
 
 - (void)loadRequestFromAddressField:(id)addressField {
