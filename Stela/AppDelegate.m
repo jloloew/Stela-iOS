@@ -45,32 +45,39 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	}];
 	
 	//TODO
-	[self test];
+//	[self test];
 	
     return YES;
 }
 
 - (void)test {
-	NSArray *tests = @[ @"",
+	NSArray *testCases = @[ @"",
 						@"testa",
 						@"testa testa",
 						@"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz+zzzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++",
 						@"0010012001001230010012001001234001001200100123001001200100123450010012001001230010012001001234001001200100123001001200100123456" ];
-	NSArray *chunkifyStringExpectedResults = @[ @"",
-								  @"testa",
-								  @"testa testa",
-								  @"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz- +zzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++",
-								  @"001001200100123001001200100123400100120010012300100120010012- 345001001200100123001001200100123400100120010012300100120010- 0123456"];
+	NSArray *formatStringExpectedResults = @[ @"",
+											  @"testa",
+											  @"testa testa",
+											  @"super...",
+											  @"001001200100123" ];
+	NSArray *chunkifyStringExpectedResults = @[ @[ @"" ],
+								  @[ @"testa" ],
+								  @[ @"testa testa" ],
+								  @[ @"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz- ", @"+zzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++" ],
+								  @[ @"001001200100123001001200100123400100120010012300100120010012- ", @"345001001200100123001001200100123400100120010012300100120010- ", @"0123456" ] ];
 	NSArray *testDescriptions = @[ @"empty string",
 							   @"testa",
 							   @"testa testa",
 							   @"supercalifre...",
 							   @"long string with two hyphens" ];
-	for (int i = 0; i < MIN([tests count], [chunkifyStringExpectedResults count]); i++) {
-		NSString *test = tests[i];
-		NSString *chunkifyStringResult = [AppDelegate formatString:test];
-		NSString *description = (i < [testDescriptions count] && testDescriptions[i] != nil && [testDescriptions[i] length] > 0) ? testDescriptions[i] : tests[i];
-		NSLog(@"%@ %hhd", description, [chunkifyStringResult isEqual:chunkifyStringExpectedResults[i]]);
+	for (int i = 0; i < MIN([testCases count], [chunkifyStringExpectedResults count]); i++) {
+		NSString *testCase = testCases[i];
+		NSString *formatStringResult = [AppDelegate formatString:testCase];
+		NSArray *chunkifyStringResult = [AppDelegate chunkifyString:testCase];
+		NSString *testDescription = (i < [testDescriptions count] && testDescriptions[i] != nil && [testDescriptions[i] length] > 0) ? testDescriptions[i] : testCases[i];
+		NSLog(@"formatString: %@ %hhd", testDescription, [formatStringResult isEqualToString:formatStringExpectedResults[i]]);
+		NSLog(@"chunkifyString: %@ %hhd", testDescription, [chunkifyStringResult isEqualToArray:chunkifyStringExpectedResults[i]]);
 	}
 }
 
@@ -99,14 +106,16 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	if ([text length] <= sMaxWordLength) {
 		return text;
 	}
+	//TODO: Does this work?
+	__strong static NSString *delimiter_to_be_inserted = @"- ";
+	NSString *result = [string substringToIndex:(sMaxWordLength - [delimiter_to_be_inserted length])];	// Cut it short so there's room for the "- "
 	NSRange range;
 	range.location = 0;
-	range.length = sMaxWordLength;
-	NSString *result = [text substringToIndex:range.length];
+	range.length = [result length];
 	while (range.location < [text length]) {
 		range.location += range.length;
-		range.length = MIN(sMaxWordLength, [text length] - range.location - 1);
-		result = [NSString stringWithFormat:@"%@- %@", result, [text substringWithRange:range]];
+		range.length = MIN(sMaxWordLength - [delimiter_to_be_inserted length], [text length] - range.location - 1);
+		result = [NSString stringWithFormat:@"%@%@%@", result, delimiter_to_be_inserted, [text substringWithRange:range]];
 	}
 	return result;
 }
@@ -154,7 +163,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 				NSDictionary *chunkDict = @{ @(0): chunkString };
 				[self.connectedWatch appMessagesPushUpdate:chunkDict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
 					if (!error) {
-						NSLog(@"Successfully send chunk.");
+						NSLog(@"Successfully sent chunk.");
 					} else {
 						NSLog(@"Error sending chunk: %@", error);
 					}

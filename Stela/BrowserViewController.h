@@ -7,8 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AppDelegate.h"
 
-@interface BrowserViewController : UIViewController
+@interface BrowserViewController : UIViewController <PebbleConnectionNoticeDelegate>
 
 - (IBAction)sendToPebble:(id)sender;
 

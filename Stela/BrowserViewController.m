@@ -7,16 +7,15 @@
 //
 
 #import "BrowserViewController.h"
-#import "AppDelegate.h"
 
-static const CGFloat kNavBarHeight = 52.0f;
+//static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
 static const CGFloat kMargin = 10.0f;
 static const CGFloat kSpacer = 2.0f;
-static const CGFloat kLabelFontSize = 12.0f;
+//static const CGFloat kLabelFontSize = 12.0f;
 static const CGFloat kAddressHeight = 24.0f;
 
-@interface BrowserViewController () <UIWebViewDelegate>
+@interface BrowserViewController () <UIWebViewDelegate, PebbleConnectionNoticeDelegate>
 
 @property (weak, nonatomic) IBOutlet UIWebView *webView;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *back;
@@ -71,6 +70,8 @@ static const CGFloat kAddressHeight = 24.0f;
 	  forControlEvents:UIControlEventEditingDidEndOnExit];
 	[navBar addSubview:address];
 	self.addressField = address;
+	
+	((AppDelegate*)([UIApplication sharedApplication].delegate)).delegate = self;
 
     [self loadRequestFromString:self.addressField.text];
 }
@@ -104,6 +105,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.forward.enabled = self.webView.canGoForward;
 	self.back.enabled = self.webView.canGoBack;
 	self.stop.enabled = self.webView.loading;
+	//TODO: update sendToPebble button
 }
 
 - (void)loadRequestFromAddressField:(id)addressField {
@@ -123,16 +125,23 @@ static const CGFloat kAddressHeight = 24.0f;
 }
 
 - (void)informError:(NSError *)error {
-	[[UIAlertView alloc]
+	UIAlertView *alertView = [[UIAlertView alloc]
 	 initWithTitle:NSLocalizedString(@"Error", @"Title for error alert.")
 	 message:error.localizedDescription delegate:nil
 	 cancelButtonTitle:NSLocalizedString(@"OK", @"OK button in error alert.")
 	 otherButtonTitles:nil];
+	[alertView show];
 }
+
+#pragma mark Watch Stuff
 
 - (IBAction)sendToPebble:(id)sender {
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 	[appDelegate pushString:[self getParsedText] toWatch:appDelegate.connectedWatch];
+}
+
+- (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
+	self.sendToPebble.enabled = isConnected;
 }
 
 

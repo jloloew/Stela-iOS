@@ -31,7 +31,6 @@
 		B81DA2F118F8C6F300C49C21 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2EE18F8C6F300C49C21 /* CoreMotion.framework */; };
 		B81DA2F318F8C6FD00C49C21 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2F218F8C6FD00C49C21 /* MessageUI.framework */; };
 		B86E1B2C18F8C84800FAD644 /* BrowserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B86E1B2B18F8C84800FAD644 /* BrowserViewController.m */; };
-		B86E1B2E18F9007500FAD644 /* ArticlePull.js in Sources */ = {isa = PBXBuildFile; fileRef = B86E1B2D18F9007500FAD644 /* ArticlePull.js */; };
 		B86E1B2F18F90BAA00FAD644 /* ArticlePull.js in Resources */ = {isa = PBXBuildFile; fileRef = B86E1B2D18F9007500FAD644 /* ArticlePull.js */; };
 /* End PBXBuildFile section */
 
@@ -299,7 +298,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B81DA2C618F8C61800C49C21 /* ViewController.m in Sources */,
-				B86E1B2E18F9007500FAD644 /* ArticlePull.js in Sources */,
 				B86E1B2C18F8C84800FAD644 /* BrowserViewController.m in Sources */,
 				B81DA2BD18F8C61800C49C21 /* AppDelegate.m in Sources */,
 				B81DA2B918F8C61800C49C21 /* main.m in Sources */,

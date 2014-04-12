@@ -9,13 +9,22 @@
 #import <UIKit/UIKit.h>
 #import <PebbleKit/PebbleKit.h>
 
+@protocol PebbleConnectionNoticeDelegate;
+
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
 @property (strong, nonatomic) PBWatch *connectedWatch;
+@property (weak, nonatomic) id<PebbleConnectionNoticeDelegate> delegate;
 
 - (void)launchPebbleApp;
 - (void)killPebbleApp;
 - (void)pushString:(NSString*)text toWatch:(PBWatch*)watch;
+
+@end
+
+@protocol PebbleConnectionNoticeDelegate <NSObject>
+
+- (void)watch:(PBWatch*)watch didChangeConnectionStateToConnected:(BOOL)isConnected;
 
 @end
