@@ -7,6 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
+#import "AppDelegate.h"
 
 @interface StelaTests : XCTestCase
 
@@ -24,6 +25,21 @@
 {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
+}
+
+- (void)testFormatString{
+	NSString *test = @"";
+	NSString *result = [AppDelegate formatString:test];
+	XCTAssertEqualObjects(test, result, @"empty string broke");
+	test = @"testa";
+	result = [AppDelegate formatString:test];
+	XCTAssertEqualObjects(test, result, @"testa broke");
+	test = @"testa testa";
+	result = [AppDelegate formatString:test];
+	XCTAssertEqualObjects(test, result, @"testa testa broke");
+	test = @"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz+zzzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++";
+	result = [AppDelegate formatString:test];
+	XCTAssertEqualObjects(result, @"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz- +zzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++", @"supercalifre... broke");
 }
 
 - (void)testExample

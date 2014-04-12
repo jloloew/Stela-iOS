@@ -9,12 +9,14 @@
 #import "AppDelegate.h"
 
 const static int sMaxTextChunkLength = 60;
+const static int sMaxWordLength = 8;
 const static int sPebbleStorageCapacity = 50000;	// 50KB
+
 
 @interface AppDelegate () <PBPebbleCentralDelegate>
 
-+ (NSArray*)chunkifyString:(NSString*)text;	// Break down the text into chunks small enough to send to the Pebble.
-+ (NSString*)formatString:(NSString*)text;
++ (NSArray*)chunkifyString:(NSString*)text;		// Break down the text into chunks small enough to send to the Pebble.
++ (NSString*)formatString:(NSString*)chunk;		// Take a chunk and insert "- " if it's too long to fit on the screen of the Pebble.
 
 - (void)handleUpdateFromWatch:(PBWatch*)watch withUpdate:(NSDictionary*)update;
 
@@ -42,8 +44,74 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 		return YES;
 	}];
 	
+	//TODO
+	[self test];
+	
     return YES;
 }
+
+- (void)test {
+	NSArray *tests = @[ @"",
+						@"testa",
+						@"testa testa",
+						@"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz+zzzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++",
+						@"0010012001001230010012001001234001001200100123001001200100123450010012001001230010012001001234001001200100123001001200100123456" ];
+	NSArray *chunkifyStringExpectedResults = @[ @"",
+								  @"testa",
+								  @"testa testa",
+								  @"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz- +zzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++",
+								  @"001001200100123001001200100123400100120010012300100120010012- 345001001200100123001001200100123400100120010012300100120010- 0123456"];
+	NSArray *testDescriptions = @[ @"empty string",
+							   @"testa",
+							   @"testa testa",
+							   @"supercalifre...",
+							   @"long string with two hyphens" ];
+	for (int i = 0; i < MIN([tests count], [chunkifyStringExpectedResults count]); i++) {
+		NSString *test = tests[i];
+		NSString *chunkifyStringResult = [AppDelegate formatString:test];
+		NSString *description = (i < [testDescriptions count] && testDescriptions[i] != nil && [testDescriptions[i] length] > 0) ? testDescriptions[i] : tests[i];
+		NSLog(@"%@ %hhd", description, [chunkifyStringResult isEqual:chunkifyStringExpectedResults[i]]);
+	}
+}
+
+#pragma mark String Stuff
+
+/** Takes a string and splits it into words
+ */
++ (NSArray*)chunkifyString:(NSString *)text {
+	if ([text length] == 0) {
+		return nil;
+	}
+	NSMutableArray *chunks = [NSMutableArray arrayWithArray:[text componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+	for (int i = 0; i < [chunks count]; i++) {
+		chunks[i] = [AppDelegate formatString:chunks[i]];
+		if ([chunks[i] length] > sMaxTextChunkLength) {
+			[chunks insertObject:[chunks[i] substringFromIndex:sMaxTextChunkLength] atIndex:(i + 1)];
+			chunks[i] = [chunks[i] substringToIndex:sMaxTextChunkLength];
+		}
+	}
+	return chunks;
+}
+
+// Tested
++ (NSString*)formatString:(NSString *)string {
+	NSString *text = [string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	if ([text length] <= sMaxWordLength) {
+		return text;
+	}
+	NSRange range;
+	range.location = 0;
+	range.length = sMaxWordLength;
+	NSString *result = [text substringToIndex:range.length];
+	while (range.location < [text length]) {
+		range.location += range.length;
+		range.length = MIN(sMaxWordLength, [text length] - range.location - 1);
+		result = [NSString stringWithFormat:@"%@- %@", result, [text substringWithRange:range]];
+	}
+	return result;
+}
+
+#pragma mark Watch Stuff
 
 - (void)launchPebbleApp {
 	[self.connectedWatch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
@@ -53,7 +121,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 			NSLog(@"Error launching app - error: %@", error);
 		}
 	}
-	];
+	 ];
 }
 
 - (void)killPebbleApp {
@@ -104,64 +172,6 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 - (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update {
 	//TODO
 	NSLog(@"Received update: %@", update);
-}
-
-+ (NSArray*)chunkifyString:(NSString *)text {
-	if ([text length] == 0) {
-		return nil;
-	}
-	NSMutableArray *chunks = [NSMutableArray array];
-	for (int i = 0; i < [text lengthOfBytesUsingEncoding:NSUnicodeStringEncoding];) {
-		NSRange range;
-		range.location = i;
-		range.length = MIN((i += sMaxTextChunkLength), [text length]);
-		NSString *chunk = [text substringWithRange:range];
-		[chunks addObject:chunk];
-	}
-	return chunks;
-}
-
-+ (NSString*)formatString:(NSString *)text {
-	if ([text length] <= sMaxTextChunkLength) {
-		return text;
-	}
-	NSRange range;
-	range.location = 0;
-	range.length = sMaxTextChunkLength;
-	NSString *result = [text substringToIndex:range.length];
-	while (range.location < [text length]) {
-		range.location += range.length;
-		range.length = MAX(sMaxTextChunkLength, [text length] - range.location);
-		result = [NSString stringWithFormat:@"%@- %@", result, [text substringWithRange:range]];
-	}
-	return result;
-}
-							
-- (void)applicationWillResignActive:(UIApplication *)application
-{
-	// Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-	// Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-}
-
-- (void)applicationDidEnterBackground:(UIApplication *)application
-{
-	// Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
-	// If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-}
-
-- (void)applicationWillEnterForeground:(UIApplication *)application
-{
-	// Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
-}
-
-- (void)applicationDidBecomeActive:(UIApplication *)application
-{
-	// Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-}
-
-- (void)applicationWillTerminate:(UIApplication *)application
-{
-	// Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
 #pragma mark PBPebbleCentralDelegate methods

@@ -32,7 +32,9 @@ static const CGFloat kAddressHeight = 24.0f;
 - (void)loadRequestFromString:(NSString*)urlString;
 - (void)updateButtons;
 - (void)loadRequestFromAddressField:(id)addressField;
+- (void)updateAddress:(NSURLRequest*)request;
 - (void)updateTitle:(UIWebView*)aWebView;
+- (void)informError:(NSError*)error;
 
 @end
 
@@ -62,6 +64,8 @@ static const CGFloat kAddressHeight = 24.0f;
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	address.borderStyle = UITextBorderStyleRoundedRect;
 	address.font = [UIFont systemFontOfSize:17];
+	address.keyboardType = UIKeyboardTypeURL;
+	address.clearButtonMode = UITextFieldViewModeWhileEditing;
 	[address addTarget:self
 				action:@selector(loadRequestFromAddressField:)
 	  forControlEvents:UIControlEventEditingDidEndOnExit];
@@ -73,9 +77,9 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (NSString*)getParsedText {
 	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
-	NSError *__autoreleasing *error = nil;
+	NSError *__autoreleasing *error = NULL;
 	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:nil];
-	if (error == nil) {
+	if (error == NULL) {
 		NSLog(@"Loaded js successfully");
 		js = [NSString stringWithFormat:js, [NSString stringWithFormat:@"\"%@\"", self.addressField.text]];
 		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:js];
@@ -88,6 +92,10 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (void)loadRequestFromString:(NSString *)urlString {
 	NSURL *url = [NSURL URLWithString:urlString];
+	if (!url.scheme) {
+		NSString *modifiedURLString = [NSString stringWithFormat:@"http://%@", url];
+		url = [NSURL URLWithString:modifiedURLString];
+	}
 	NSURLRequest *urlRequest = [NSURLRequest requestWithURL:url];
 	[self.webView loadRequest:urlRequest];
 }
@@ -103,9 +111,23 @@ static const CGFloat kAddressHeight = 24.0f;
 	[self loadRequestFromString:urlString];
 }
 
+- (void)updateAddress:(NSURLRequest *)request {
+	NSURL *url = [request mainDocumentURL];
+	NSString *absoluteString = [url absoluteString];
+	self.addressField.text = absoluteString;
+}
+
 - (void)updateTitle:(UIWebView *)aWebView {
 	NSString *pageTitle = [aWebView stringByEvaluatingJavaScriptFromString:@"document.title"];
 	self.pageTitle.text = pageTitle;
+}
+
+- (void)informError:(NSError *)error {
+	[[UIAlertView alloc]
+	 initWithTitle:NSLocalizedString(@"Error", @"Title for error alert.")
+	 message:error.localizedDescription delegate:nil
+	 cancelButtonTitle:NSLocalizedString(@"OK", @"OK button in error alert.")
+	 otherButtonTitles:nil];
 }
 
 - (IBAction)sendToPebble:(id)sender {
@@ -125,10 +147,12 @@ static const CGFloat kAddressHeight = 24.0f;
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	[self updateButtons];
 	[self updateTitle:webView];
+	[self updateAddress:[webView request]];
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	[self updateButtons];
+	[self informError:error];
 }
 @end
