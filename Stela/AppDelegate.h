@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 #import <PebbleKit/PebbleKit.h>
 
+const static BOOL debug = YES;
+
 @protocol PebbleConnectionNoticeDelegate;
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>

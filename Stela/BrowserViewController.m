@@ -86,6 +86,9 @@ static const CGFloat kAddressHeight = 24.0f;
 		NSLog(@"Loaded js successfully");
 		js = [NSString stringWithFormat:js, [NSString stringWithFormat:@"\"%@\"", self.addressField.text]];
 		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:js];
+		// Work around Dave's incompetence. Haha, Dave's incontinent. Wait...
+		if(debug && [parsedText isEqualToString:@""])
+			return @"This is a test article. It's quite articulate. It's about the immaculate conception.";
 		return parsedText;
 	} else {
 		NSLog(@"Error loading js");
