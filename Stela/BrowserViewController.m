@@ -25,7 +25,6 @@ static const CGFloat kAddressHeight = 24.0f;
 
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *sendToPebble;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *forward;
-@property (weak, nonatomic) IBOutlet UIBarButtonItem *refreshOrStop;
 
 @property (strong, nonatomic) UILabel *pageTitle;
 @property (strong, nonatomic) UITextField *addressField;

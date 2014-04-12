@@ -43,8 +43,6 @@
                             </connections>
                         </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="ne4-l5-xwz"/>
-                        <barButtonItem title="Item" id="Rbj-Ji-iMc"/>
-                        <barButtonItem style="plain" systemItem="flexibleSpace" id="fo7-x8-bMe"/>
                         <barButtonItem title="Stela" id="ABn-b8-fuF">
                             <connections>
                                 <action selector="sendToPebble:" destination="vXZ-lx-hvc" id="kuI-bE-ZSR"/>
@@ -62,7 +60,6 @@
                         <outlet property="back" destination="fQL-og-pOG" id="NC7-iC-flW"/>
                         <outlet property="forward" destination="Pxn-Wt-Pof" id="8hj-FC-bLk"/>
                         <outlet property="refresh" destination="kA6-ou-E2s" id="nDS-fe-EnD"/>
-                        <outlet property="refreshOrStop" destination="Rbj-Ji-iMc" id="mfP-Xi-9QI"/>
                         <outlet property="sendToPebble" destination="ABn-b8-fuF" id="be4-mh-zsI"/>
                         <outlet property="stop" destination="hEZ-nu-SSL" id="DhI-F5-mwH"/>
                         <outlet property="webView" destination="07J-oG-bcX" id="WKO-0G-XnI"/>

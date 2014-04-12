@@ -12,7 +12,7 @@
 #define URL_STRING_DICTIONARY_KEY 1
 
 const static BOOL debug = YES;
-static NSString * const stelaUUIDString = @"70580e72-b262-4971-992d-9f89053fad11";
+static NSString * const stelaUUIDString = @"5bee74a1-b87d-4c62-adcf-8e4eec7a8d69";//@"7bd8c9da-46e2-49d7-bf55-b0a29b7bedfb";// @"70580e72-b262-4971-992d-9f89053fad11";
 
 @protocol PebbleConnectionNoticeDelegate;
 
