@@ -150,9 +150,9 @@
 			isa = PBXGroup;
 			children = (
 				B81DA2BB18F8C61800C49C21 /* AppDelegate.h */,
+				B81DA2BC18F8C61800C49C21 /* AppDelegate.m */,
 				B86E1B2A18F8C84800FAD644 /* BrowserViewController.h */,
 				B86E1B2B18F8C84800FAD644 /* BrowserViewController.m */,
-				B81DA2BC18F8C61800C49C21 /* AppDelegate.m */,
 				B81DA2BE18F8C61800C49C21 /* Main_iPhone.storyboard */,
 				B81DA2C118F8C61800C49C21 /* Main_iPad.storyboard */,
 				B81DA2C418F8C61800C49C21 /* ViewController.h */,
