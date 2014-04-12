@@ -57,7 +57,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	/* Create the address bar */
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer*2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
-	address.text = @"http://www.gizoogle.net";
+	address.text = @"https://en.m.wikipedia.org/wiki/Bubble_gum";
 	[address setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 	[address setAutocorrectionType:UITextAutocorrectionTypeNo];
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -75,7 +75,9 @@ static const CGFloat kAddressHeight = 24.0f;
 
     [self loadRequestFromString:self.addressField.text];
 }
-
+/**	Return the result of running Dave's JavaScript, which supposedly
+ *	pulls the currently loaded article from the page.
+ */
 - (NSString*)getParsedText {
 	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
 	NSError *__autoreleasing *error = NULL;
@@ -91,6 +93,13 @@ static const CGFloat kAddressHeight = 24.0f;
 	}
 }
 
+#pragma mark Browser Stuff
+
+- (void)loadRequestFromAddressField:(id)addressField {
+	NSString *urlString = [addressField text];
+	[self loadRequestFromString:urlString];
+}
+
 - (void)loadRequestFromString:(NSString *)urlString {
 	NSURL *url = [NSURL URLWithString:urlString];
 	if (!url.scheme) {
@@ -101,22 +110,17 @@ static const CGFloat kAddressHeight = 24.0f;
 	[self.webView loadRequest:urlRequest];
 }
 
+- (void)updateAddress:(NSURLRequest *)request {
+	NSURL *url = [request mainDocumentURL];
+	NSString *absoluteString = [url absoluteString];
+	self.addressField.text = absoluteString;
+}
+
 - (void)updateButtons {
 	self.forward.enabled = self.webView.canGoForward;
 	self.back.enabled = self.webView.canGoBack;
 	self.stop.enabled = self.webView.loading;
 	//TODO: update sendToPebble button
-}
-
-- (void)loadRequestFromAddressField:(id)addressField {
-	NSString *urlString = [addressField text];
-	[self loadRequestFromString:urlString];
-}
-
-- (void)updateAddress:(NSURLRequest *)request {
-	NSURL *url = [request mainDocumentURL];
-	NSString *absoluteString = [url absoluteString];
-	self.addressField.text = absoluteString;
 }
 
 - (void)updateTitle:(UIWebView *)aWebView {
