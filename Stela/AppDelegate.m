@@ -32,7 +32,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	[[PBPebbleCentral defaultCentral] setDelegate:self];
 	// Set the UUID of the app
 	uuid_t stelaUUIDBytes;
-	NSUUID *stelaUUID = [[NSUUID alloc] initWithUUIDString:@"70580e72-b262-4971-992d-9f89053fad11"];
+	NSUUID *stelaUUID = [[NSUUID alloc] initWithUUIDString:[NSString stringWithString:stelaUUIDString]];
 	[stelaUUID getUUIDBytes:stelaUUIDBytes];
 	[[PBPebbleCentral defaultCentral] setAppUUID:[NSData dataWithBytes:stelaUUIDBytes length:16]];
 	
@@ -44,12 +44,10 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 		return YES;
 	}];
 	
-	//TODO
-//	[self test];
-	
     return YES;
 }
 
+//TODO: Remove before release
 - (void)test {
 	NSArray *testCases = @[ @"",
 						@"testa",
@@ -106,8 +104,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	if ([text length] <= sMaxWordLength) {
 		return text;
 	}
-	//TODO: Does this work?
-	__strong static NSString *delimiter_to_be_inserted = @"- ";
+	static NSString *delimiter_to_be_inserted = @"- ";
 	NSString *result = [string substringToIndex:(sMaxWordLength - [delimiter_to_be_inserted length])];	// Cut it short so there's room for the "- "
 	NSRange range;
 	range.location = 0;
@@ -179,7 +176,6 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 }
 
 - (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update {
-	//TODO
 	NSLog(@"Received update: %@", update);
 }
 
@@ -187,6 +183,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidConnect:(PBWatch *)watch isNew:(BOOL)isNew {
 	NSLog(@"Pebble connected: %@", [watch name]);
 	self.connectedWatch = watch;
+	[self.delegate watch:watch didChangeConnectionStateToConnected:YES];
 }
 
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidDisconnect:(PBWatch *)watch {
@@ -194,6 +191,14 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	if (self.connectedWatch == watch || [watch isEqual:self.connectedWatch]) {
 		self.connectedWatch = nil;
 	}
+	[self.delegate watch:watch didChangeConnectionStateToConnected:NO];
+}
+
+- (void)testAppMessageWithURLString:(NSString *)urlString {
+	[self.connectedWatch appMessagesPushUpdate:@{ @(URL_STRING_DICTIONARY_KEY): urlString } onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+		if(debug)
+			NSLog(@"Successfully sent NSDictionary with URL: %@ to watch: %@ with error: %@", update, [watch name], error);
+	}];
 }
 
 @end

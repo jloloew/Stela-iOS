@@ -15,14 +15,17 @@ static const CGFloat kSpacer = 2.0f;
 //static const CGFloat kLabelFontSize = 12.0f;
 static const CGFloat kAddressHeight = 24.0f;
 
+
 @interface BrowserViewController () <UIWebViewDelegate, PebbleConnectionNoticeDelegate>
 
 @property (weak, nonatomic) IBOutlet UIWebView *webView;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *back;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *stop;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *refresh;
+
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *sendToPebble;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *forward;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *refreshOrStop;
 
 @property (strong, nonatomic) UILabel *pageTitle;
 @property (strong, nonatomic) UITextField *addressField;
@@ -75,17 +78,36 @@ static const CGFloat kAddressHeight = 24.0f;
 
     [self loadRequestFromString:self.addressField.text];
 }
+
 /**	Return the result of running Dave's JavaScript, which supposedly
  *	pulls the currently loaded article from the page.
  */
+
 - (NSString*)getParsedText {
+	//TODO: Remove before release
+	[((AppDelegate*) [[UIApplication sharedApplication] delegate]) testAppMessageWithURLString:self.addressField.text];
+	return @"";
+	
+	
 	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
 	NSError *__autoreleasing *error = NULL;
-	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:nil];
+	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:NULL];
 	if (error == NULL) {
 		NSLog(@"Loaded js successfully");
-		js = [NSString stringWithFormat:js, [NSString stringWithFormat:@"\"%@\"", self.addressField.text]];
-		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:js];
+		// Wait until the page is done loading before trying to do anything
+		while ([self.webView isLoading]) {
+			if(debug)
+				NSLog(@"getParsedText is waiting for the WebView to finish loading");
+			sleep(1);
+		}
+//		js = [NSString stringWithFormat:js, [NSString stringWithFormat:@"\"%@\"", self.addressField.text]];
+		[self.webView stringByEvaluatingJavaScriptFromString:js];
+		NSString *jsCall = [NSString stringWithFormat:@"getText(%@)", self.addressField.text];
+		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:jsCall];
+//		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:js];
+		if (debug) {
+			NSLog(@"Dave's next failed attempt: %@", parsedText);
+		}
 		// Work around Dave's incompetence. Haha, Dave's incontinent. Wait...
 		if(debug && [parsedText isEqualToString:@""])
 			return @"This is a test article. It's quite articulate. It's about the immaculate conception.";
@@ -95,6 +117,14 @@ static const CGFloat kAddressHeight = 24.0f;
 		return @"";
 	}
 }
+
+/*
+- (NSString*)getParsedText {
+//	UIWebView *wview = [[UIWebView alloc] init];
+//	wview.hidden = YES;
+	[self.webView stringByEvaluatingJavaScriptFromString:js];
+}
+*/
 
 #pragma mark Browser Stuff
 
@@ -123,7 +153,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.forward.enabled = self.webView.canGoForward;
 	self.back.enabled = self.webView.canGoBack;
 	self.stop.enabled = self.webView.loading;
-	//TODO: update sendToPebble button
+	self.sendToPebble.enabled = [((AppDelegate*)[[UIApplication sharedApplication] delegate]).connectedWatch isConnected];
 }
 
 - (void)updateTitle:(UIWebView *)aWebView {
