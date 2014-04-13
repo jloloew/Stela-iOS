@@ -47,38 +47,6 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
     return YES;
 }
 
-//TODO: Remove before release
-- (void)test {
-	NSArray *testCases = @[ @"",
-						@"testa",
-						@"testa testa",
-						@"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz+zzzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++",
-						@"0010012001001230010012001001234001001200100123001001200100123450010012001001230010012001001234001001200100123001001200100123456" ];
-	NSArray *formatStringExpectedResults = @[ @"",
-											  @"testa",
-											  @"testa testa",
-											  @"super...",
-											  @"001001200100123" ];
-	NSArray *chunkifyStringExpectedResults = @[ @[ @"" ],
-								  @[ @"testa" ],
-								  @[ @"testa testa" ],
-								  @[ @"supercalifredgelisticexpialidociouszzzzzzzzzzzzzzzzzzzzzzzzz- ", @"+zzzzzzzzzzzzzzzzzzzgfdsafffffff++++++++++++++++++++++++++++" ],
-								  @[ @"001001200100123001001200100123400100120010012300100120010012- ", @"345001001200100123001001200100123400100120010012300100120010- ", @"0123456" ] ];
-	NSArray *testDescriptions = @[ @"empty string",
-							   @"testa",
-							   @"testa testa",
-							   @"supercalifre...",
-							   @"long string with two hyphens" ];
-	for (int i = 0; i < MIN([testCases count], [chunkifyStringExpectedResults count]); i++) {
-		NSString *testCase = testCases[i];
-		NSString *formatStringResult = [AppDelegate formatString:testCase];
-		NSArray *chunkifyStringResult = [AppDelegate chunkifyString:testCase];
-		NSString *testDescription = (i < [testDescriptions count] && testDescriptions[i] != nil && [testDescriptions[i] length] > 0) ? testDescriptions[i] : testCases[i];
-		NSLog(@"formatString: %@ %hhd", testDescription, [formatStringResult isEqualToString:formatStringExpectedResults[i]]);
-		NSLog(@"chunkifyString: %@ %hhd", testDescription, [chunkifyStringResult isEqualToArray:chunkifyStringExpectedResults[i]]);
-	}
-}
-
 #pragma mark String Stuff
 
 /** Takes a string and splits it into words
@@ -142,9 +110,22 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 }
 
 - (void)pushString:(NSString *)text toWatch:(PBWatch *)watch {
+	if (![watch isConnected]) {
+		NSLog(@"AppDelegate pushString toWatch: Error: watch not connected!");
+		return;
+	}
+	
 	[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
 		if (isAppMessagesSupported) {
 			NSLog(@"App messages is supported.");
+			// Launch the watch app
+			[self.connectedWatch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
+				if (!error) {
+					NSLog(@"Successfully launched app.");
+				} else {
+					NSLog(@"Error launching app - Error: %@", error);
+				}
+			}];
 			// Get chunks small enough to send to Pebble
 			NSArray *chunks = [AppDelegate chunkifyString:text];
 			// Limit the amount of data that can be sent
@@ -175,8 +156,42 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	}];
 }
 
+- (void)sendURL:(NSString *)urlString toWatch:(PBWatch *)watch {
+	if(debug)
+		NSLog(@"Called AppDelegate sendURL toWatch");
+	
+	if (![watch isConnected]) {
+		NSLog(@"AppDelegate sendURL toWatch: No watch connected");
+	} else {
+		// Check to see if app messages is supported before sending anything
+		[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isSupported) {
+			if (!isSupported) {
+				NSLog(@"AppDelegate sendURL toWatch: App messages not supported!");
+			} else {
+				// Launch Stela on the Pebble
+				[watch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
+					if (!error) {
+						// Finally push the URL to the Pebble
+						[watch appMessagesPushUpdate:@{ @(URL_STRING_DICTIONARY_KEY): urlString } onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+							if (!error) {
+								if(debug)
+									NSLog(@"AppDelegate sendURL toWatch: Successfully pushed update: %@", update);
+							} else {
+								NSLog(@"AppDelegate sendURL toWatch: Error: %@ while pushing update: %@", error, update);
+							}
+						}];
+					} else {
+						NSLog(@"AppDelegate sendURL toWatch: Failed to launch Stela on the Pebble: %@", error);
+					}
+				}];
+			}
+		}];
+	}
+}
+
 - (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update {
-	NSLog(@"Received update: %@", update);
+	if(debug)
+		NSLog(@"Received update: %@", update);
 }
 
 #pragma mark PBPebbleCentralDelegate methods
@@ -192,13 +207,6 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 		self.connectedWatch = nil;
 	}
 	[self.delegate watch:watch didChangeConnectionStateToConnected:NO];
-}
-
-- (void)testAppMessageWithURLString:(NSString *)urlString {
-	[self.connectedWatch appMessagesPushUpdate:@{ @(URL_STRING_DICTIONARY_KEY): urlString } onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-		if(debug)
-			NSLog(@"Successfully sent NSDictionary with URL: %@ to watch: %@ with error: %@", update, [watch name], error);
-	}];
 }
 
 @end

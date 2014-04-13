@@ -22,7 +22,6 @@ static const CGFloat kAddressHeight = 24.0f;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *back;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *stop;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *refresh;
-
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *sendToPebble;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *forward;
 
@@ -83,33 +82,30 @@ static const CGFloat kAddressHeight = 24.0f;
  */
 
 - (NSString*)getParsedText {
-	//TODO: Remove before release
-	[((AppDelegate*) [[UIApplication sharedApplication] delegate]) testAppMessageWithURLString:self.addressField.text];
-	return @"";
-	
-	
 	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
-	NSError *__autoreleasing *error = NULL;
-	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:NULL];
-	if (error == NULL) {
-		NSLog(@"Loaded js successfully");
+	NSError *__autoreleasing *error;
+	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:error];
+	if (!error) {
+		if(debug)
+			NSLog(@"Loaded js successfully");
+		
+/*		// This is unnecessary because I just need to send the URL
 		// Wait until the page is done loading before trying to do anything
 		while ([self.webView isLoading]) {
 			if(debug)
 				NSLog(@"getParsedText is waiting for the WebView to finish loading");
 			sleep(1);
 		}
+*/
+		
 //		js = [NSString stringWithFormat:js, [NSString stringWithFormat:@"\"%@\"", self.addressField.text]];
 		[self.webView stringByEvaluatingJavaScriptFromString:js];
 		NSString *jsCall = [NSString stringWithFormat:@"getText(%@)", self.addressField.text];
 		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:jsCall];
 //		NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:js];
-		if (debug) {
-			NSLog(@"Dave's next failed attempt: %@", parsedText);
-		}
+		if (debug)
+			NSLog(@"BrowserViewController getParsedText: Text returned by call to the JS parser: %@", parsedText);
 		// Work around Dave's incompetence. Haha, Dave's incontinent. Wait...
-		if(debug && [parsedText isEqualToString:@""])
-			return @"This is a test article. It's quite articulate. It's about the immaculate conception.";
 		return parsedText;
 	} else {
 		NSLog(@"Error loading js");
@@ -165,7 +161,8 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (IBAction)sendToPebble:(id)sender {
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
-	[appDelegate pushString:[self getParsedText] toWatch:appDelegate.connectedWatch];
+	[appDelegate sendURL:self.addressField.text toWatch:appDelegate.connectedWatch];
+//	[appDelegate pushString:[self getParsedText] toWatch:appDelegate.connectedWatch];
 }
 
 - (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
