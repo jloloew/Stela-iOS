@@ -98,7 +98,7 @@ typedef NS_ENUM(UInt8, PBAppState) {
  *  Fetches the run state of the watch application with UUID as set using
  *  -[PBPebbleCentral setAppUUID:]. You can use this method to determine whether the watch
  *  application is running or not.
- *  TODO: Ask Francois how this API works.
+ *  TO DO: Ask Francois how this API works.
  *  @param onSent The block that will be called after the fetch state command has been
  *  sent to the watch.
  */

@@ -58,7 +58,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	/* Create the address bar */
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer*2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
-	address.text = @"https://en.m.wikipedia.org/wiki/Bubble_gum";
+	address.text = @"https://en.wikipedia.org/wiki/Bubble_gum";
 	[address setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 	[address setAutocorrectionType:UITextAutocorrectionTypeNo];
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
