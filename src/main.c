@@ -54,7 +54,7 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
   
   if(tuple){
     if(tuple->key == 1){
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "in receive handler, tuple->value->cstring: %s", tuple->value->cstring);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "In receive handler, tuple->value->cstring: %s", tuple->value->cstring);
 
       DictionaryIterator *iter;
       app_message_outbox_begin(&iter);
@@ -298,7 +298,7 @@ static void timer_callback(void *data) {
 
 static void change_to_menu(){
    frame = MENU;
-   text_layer_set_text(connection_text,"Waiting for Device..");
+   text_layer_set_text(connection_text,"Waiting for Device...");
    text_layer_set_text(display_text,"");
   
    GRect move_pos2 = (GRect) { .origin = { -15, 105 }, .size = { 180, 180 } };
