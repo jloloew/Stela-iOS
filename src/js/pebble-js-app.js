@@ -1,31 +1,61 @@
 // Function to send a message to the Pebble using AppMessage API
-var travel;
+//var travel;
+var words;
 
+/*
 function sendMessage(msg) {
   Pebble.sendAppMessage({"0": msg});
-}
+}*/
 
 //function sendURL(url) {
 //  console.log(url);
 //  Pebble.sendAppMessage({"1": url});
 //}
 
+function sendEnd(){
+  Pebble.sendAppMessage({2:"s"});
+}
+
+function sendWord (idx) {
+  if (idx < words.length && idx < 10) {
+    console.log("words[pos]: " + words[idx]);
+    Pebble.sendAppMessage({0: words[idx]},
+                           function () {
+                             sendWord(idx + 1);
+                           },
+                           function () {
+                             console.log("error - retrying...");
+                             sendWord(idx);
+                           }
+      );
+
+  } else{
+      sendEnd();
+  }
+}
+
 Pebble.addEventListener("appmessage",
   function(e) {
-    console.log("Received message: " +e.payload);
+    //console.log("Received message: " +e.payload);
     
     if(e.payload.urlstring){
-      
-      console.log("e.payload.urlstring");
       var url = e.payload.urlstring;
       console.log(url);
       getText(url);
     }
-    
+    /*
+    console.log("here1");
+    if(e.payload.moreLetters){
+      posReach = pos+5;
+      console.log("here2");
+      sendWord(pos);
+    }
+    */
     
     
   }
 );
+
 
 
 function getText(address){
@@ -60,18 +90,35 @@ function getText(address){
       var tempArticle = my_article; //redundant now but hard to fix
       var temp = tempArticle.split(" ");
       tempArticle = "";
-      travel = 0;
-      doSomething(temp, travel, travel+20);
-      travel+=20;
+      for(var i = 0; i<temp.length; i++){
+        if(temp[i].length > 20){
+          temp[i] = "";
+        } else if(temp[i].length > 13){
+          temp[i] = temp[i].substring(0,7) + "- " + temp[i].substring(7,temp[i].length);
+        }
+         else{
+          //console.log("temp[i]: " + temp[i]);
+          //sendMessage(temp[i]);
+          //sleep(200);
+          //doSomething(temp, i+1, max);
+          //setTimeout(function(){}, 20000000);
+        }
+        //console.log("temp[i]: " + temp[i]);
+      //tempArticle=tempArticle+ " " + temp[i];
+      }
+      words = temp;         
+      sendWord(0);
+      
+      //doSomething(temp, travel, travel+30);
+      //travel+=30;
       
       //console.log("tempArticle " + tempArticle);
       //sendMessage(tempArticle);
-      return;
       //return "my article " + my_article;
     }
     else {
       //console.log("Error Getting Weather: " + req.status);
-      sendMessage("ready state failed");
+      //sendMessage("ready state failed");
       return;
       //return "req.readyState failed: " + req.readyState;
     }
@@ -82,41 +129,6 @@ function getText(address){
   
   //sendMessage("req failed");
   //return "req.status failed " + req.status;
-}
-
-
-function doSomething(temp, i, max) {
-  
-   if(i<temp.length && i<max){
-        if(temp[i].length > 20){
-          console.log("i: " + i + " temp[i]: " +temp[i]);
-          temp[i] = "";
-          travel+=1;
-          doSomething(temp, i+1, max+1);
-        } else if(temp[i].length > 13){
-          sendMessage(temp[i].substring(0,7)+"-");
-          sendMessage(temp[i].substring(7,temp[i].length));
-          sleep(200);
-          doSomething(temp, i+1, max);
-        }
-         else{
-          console.log("temp[i]: " + temp[i]);
-          sendMessage(temp[i]);
-          sleep(200);
-          doSomething(temp, i+1, max);
-          //setTimeout(function(){}, 20000000);
-        }
-      //tempArticle=tempArticle+ " " + temp[i];
-  }
-   //do whatever you want here
-}
-function sleep(milliseconds) {
-  var start = new Date().getTime();
-  for (var i = 0; i < 1e7; i++) {
-    if ((new Date().getTime() - start) > milliseconds){
-      break;
-    }
-  }
 }
 
 
