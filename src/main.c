@@ -3,7 +3,7 @@
 #include "pebble.h"
 #include "pebble_fonts.h"
 
-#define ACCEL_STEP_MS 30
+#define ACCEL_STEP_MS 50
 
 static Window *window;
 static TextLayer *display_text;
@@ -20,11 +20,11 @@ GBitmap *game_bg;
 enum {MENU,BOOK,SETTINGS} frame;
 const char* fonts[4] = {FONT_KEY_GOTHIC_28, FONT_KEY_GOTHIC_28_BOLD, FONT_KEY_ROBOTO_CONDENSED_21 };
 GFont disp_font;
-int text_x = -40;
+int text_x = -20;
 int text_y = 70;
 int font_id = 0;
-int hold = 60;
-int speed = 25;
+int hold = 5;
+int speed = 40;
 
 
 static char* body_text[200]; 
@@ -34,8 +34,12 @@ int space_pos = 0;
 int tail_char=200-1;
 bool end = false;
 int push_x = 0;
+bool pause = true;
+bool started = false;
+bool fast_rewind  = false;
 ///////////////
-
+//int myCounter = 0;
+//bool ready = true;
 enum {
     MESSAGE_KEY = 0,
     URLString = 1
@@ -50,7 +54,7 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
   
   if(tuple){
     if(tuple->key == 1){
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "in receive handler, tuple->value->cstring: %s", tuple->value->cstring);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "In receive handler, tuple->value->cstring: %s", tuple->value->cstring);
 
       DictionaryIterator *iter;
       app_message_outbox_begin(&iter);
@@ -69,10 +73,17 @@ static void in_received_handler(DictionaryIterator *received, void *context) {
     }
     if(tuple->key == 0){
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Message: %s", tuple->value->cstring);
-
-        strcat(*body_text, " ");
+        strcpy(*body_text, *body_text);
         strcat(*body_text, tuple->value->cstring);
+		//char qwertyuiop = 0;
+		//sprintf(&qwertyuiop, " ");
+        strcat(*body_text, " a");
+
     }
+    //if(tuple->key == 2){
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Message: %s", "end");
+      //ready = true;
+    //}
   }
   
     
@@ -137,7 +148,6 @@ static void getNextWord(char *string[200], char* word[30]){
    }
   
   
-  
   for(int k=0; k<30; k++){
     (*word)[k] = '\0';
   }
@@ -146,13 +156,62 @@ static void getNextWord(char *string[200], char* word[30]){
   int mov = 0;
   for(int j=head_char+1; j<space_dex; j++){
       (*word)[mov] = (*string)[j];
-    //APP_LOG(APP_LOG_LEVEL_DEBUG,"mov: %u",mov);
     mov++;
   }
   APP_LOG(APP_LOG_LEVEL_DEBUG,*word);
   head_char = space_dex;
   //word = next_word;  
 }
+
+
+static void getPreviousWord(char *string[200], char* word[30]){
+  if(head_char<=1){
+    return;
+  }
+ 
+  if(word==NULL){
+    //nothing this is stupid
+  }
+  
+    int space_dex = -1;
+    int length = strlen(*string);
+    //finds index of next space if it exists, if not return done.
+    int current_pos = 0;
+    for(int i=0; i<length; i++){
+      if((*string)[i]==' '){
+        current_pos++;
+        if(current_pos == space_pos-1){
+           space_pos--;
+           space_dex = i;
+           //APP_LOG(APP_LOG_LEVEL_DEBUG,"space_dex = %u",space_dex);
+           break;
+        }
+      }
+    }
+  *word = "";
+  
+  
+   //APP_LOG(APP_LOG_LEVEL_DEBUG,"outside space_dex = %u",space_dex);
+   if(space_dex<1 || space_pos<1 || head_char<0){ //tere are no spaces so return done.
+     return;
+   }
+
+  for(int k=0; k<30; k++){
+    (*word)[k] = '\0';
+  }
+  //char * next_word[30];
+  //copies the word to next word
+  int mov = 0;
+  for(int j=space_dex; j<head_char+1; j++){
+      (*word)[mov] = (*string)[j];
+       mov++;
+  }
+  //APP_LOG(APP_LOG_LEVEL_DEBUG,*word);
+  head_char = space_dex;
+  //word = next_word;  
+}
+
+
 int getLength(char* word[30]){
   if(end){
     return 100;
@@ -165,12 +224,18 @@ int getLength(char* word[30]){
   }
   return length;
 }
-static void redraw_text(){
+void redraw_text(int type){
+  if(type == 0){
   hold--;
-  if(hold<0){
+  }
+  if(hold<0 || type>0){
       GRect move_pos2 = (GRect) { .origin = { text_x, text_y }, .size = { 180, 180 } };
       char* word[30];
-      getNextWord(body_text,word);
+      if(type == 0 || type == 2){
+        getNextWord(body_text,word);
+      }else if(type == 1){
+         getPreviousWord(body_text,word);
+      }
       int wordLength=0;
       if(end){
           hold = 1000000;
@@ -202,7 +267,7 @@ static void redraw_text(){
         
         GSize size = graphics_text_layout_get_content_size(crop,disp_font,move_pos2,GTextOverflowModeTrailingEllipsis,GTextAlignmentCenter);	
         int16_t size_x = size.w;
-        APP_LOG(APP_LOG_LEVEL_DEBUG,"shift_x = %i theSize = %i",shift_x,size_x);
+        //APP_LOG(APP_LOG_LEVEL_DEBUG,"shift_x = %i theSize = %i",shift_x,size_x);
         push_x = size_x/2;
         
       }
@@ -215,8 +280,16 @@ static void redraw_text(){
       layer_set_frame(text_layer_get_layer(display_text),move_pos2);
   }
 }
+
+
 static void timer_callback(void *data) {
-  redraw_text();
+  if(!pause){
+  redraw_text(0);
+  }else{
+    if(fast_rewind){
+      redraw_text(1);
+    }
+  }
   //animation actionEvent
   timer = app_timer_register(ACCEL_STEP_MS, timer_callback, NULL);
 }
@@ -225,7 +298,7 @@ static void timer_callback(void *data) {
 
 static void change_to_menu(){
    frame = MENU;
-   text_layer_set_text(connection_text,"Waiting for Device..");
+   text_layer_set_text(connection_text,"Waiting for Device...");
    text_layer_set_text(display_text,"");
   
    GRect move_pos2 = (GRect) { .origin = { -15, 105 }, .size = { 180, 180 } };
@@ -247,10 +320,10 @@ static void change_to_settings(){
    text_layer_set_text(display_text,"FONT");
    GRect move_pos2 = (GRect) { .origin = { text_x, text_y }, .size = { 180, 180 } };
    layer_set_frame(text_layer_get_layer(display_text),move_pos2);
-   text_layer_set_font(display_text, disp_font);APP_LOG(APP_LOG_LEVEL_DEBUG,"I'm done bro");
    GRect move_pos4 = (GRect) { .origin = { -18, -80 }, .size = { 180, 180 } };
    layer_set_frame(bitmap_layer_get_layer(image_layer),move_pos4);
   
+   bitmap_layer_set_compositing_mode(image_layer, GCompOpAssign);
    bitmap_layer_set_bitmap(image_layer, font_banner);
    bitmap_layer_set_alignment(image_layer, GAlignCenter);
   
@@ -258,7 +331,7 @@ static void change_to_settings(){
 
 static void change_to_book(){
    frame = BOOK;
-  
+   started = true;
     if(font_id==0){
       text_x=-40;
       text_y=70;
@@ -299,7 +372,20 @@ void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     change_to_settings();
   }else
   if(frame == SETTINGS){
-    change_to_menu();
+    if(!started){
+      change_to_menu();
+    }else{
+      change_to_book();
+    }
+  }
+  else if(frame == BOOK){
+    if(pause){
+      //redraw_text(2);
+    }else{
+      if(speed<100){
+      speed+=5;
+      }
+    }
   }
 }
 
@@ -327,30 +413,42 @@ void middle_click_handler(ClickRecognizerRef recognizer, void *context) {
       GRect move_pos2 = (GRect) { .origin = { text_x, text_y }, .size = { 180, 180 } };
       layer_set_frame(text_layer_get_layer(display_text),move_pos2);
       text_layer_set_font(display_text, disp_font);
+  }else if(frame == BOOK){
+      pause = !pause;
   }
 }
 
 void down_click_handler(ClickRecognizerRef recognizer, void *context) {
   if(frame == MENU){
     
-    
+  }else if(frame == BOOK){
+    if(pause){
+        end = false;
+        hold = 0;
+        redraw_text(1);
+        fast_rewind = true;
+        
+    }else{
+      if(speed>5){
+       speed-=5;
+      }
+    }
   }
 }
 
-void back_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if(frame == BOOK){
-    head_char = 0;
-    space_pos = 0;
-    end = false;
-    hold = 10;
-  }
+
+void down_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+    //nothing as of now
+    fast_rewind = false;
 }
+
+
 
 void config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, middle_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
-  window_single_click_subscribe(BUTTON_ID_BACK, back_click_handler);
+  window_long_click_subscribe(BUTTON_ID_DOWN, 50, down_click_handler, down_up_click_handler);
 }
 
 static void init() {
@@ -374,11 +472,6 @@ static void init() {
   
   change_to_menu();
   
-  app_message_register_inbox_received(in_received_handler); 
-  app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_register_outbox_sent(out_sent_handler);
-  app_message_register_outbox_failed(out_failed_handler);
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
   text_layer_set_text_alignment(display_text, GTextAlignmentCenter);
   text_layer_set_text_alignment(connection_text, GTextAlignmentCenter);
@@ -387,8 +480,12 @@ static void init() {
   layer_add_child(window_layer, text_layer_get_layer(connection_text));
   layer_add_child(window_layer, bitmap_layer_get_layer(image_layer));
   
-  *body_text = " Heres a good test a it him shit bitch fucker fuckity fuckfuck bastardly fuckalicious";
-   
+  *body_text = " _";
+   app_message_register_inbox_received(in_received_handler); 
+  app_message_register_inbox_dropped(in_dropped_handler);
+  app_message_register_outbox_sent(out_sent_handler);
+  app_message_register_outbox_failed(out_failed_handler);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
 static void deinit() {
@@ -407,3 +504,5 @@ int main(void) {
   app_event_loop();
   deinit();
 }
+
+
