@@ -161,8 +161,19 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (IBAction)sendToPebble:(id)sender {
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+	UIWebView *awebView = [[UIWebView alloc] init];
+	awebView.hidden = YES;
+	[awebView loadHTMLString:@"<script src=\"ArticlePull.js\"></script>" baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] resourcePath]]];
+	NSString *function = [[NSString alloc] initWithFormat: @"getText(%@)", self.addressField.text];
+	NSString *result = [awebView stringByEvaluatingJavaScriptFromString:function];
+	[appDelegate pushString:result toWatch:appDelegate.connectedWatch];
+	UIColor *original = self.sendToPebble.tintColor;
+	self.sendToPebble.tintColor = [UIColor greenColor];
+	sleep(2);
+	self.sendToPebble.tintColor = original;
+	return;
+	
 	[appDelegate sendURL:self.addressField.text toWatch:appDelegate.connectedWatch];
-//	[appDelegate pushString:[self getParsedText] toWatch:appDelegate.connectedWatch];
 }
 
 - (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
