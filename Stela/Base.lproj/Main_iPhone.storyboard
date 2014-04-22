@@ -16,13 +16,21 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <webView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="07J-oG-bcX">
-                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                            <webView contentMode="scaleToFill" misplaced="YES" mediaPlaybackRequiresUserAction="NO" translatesAutoresizingMaskIntoConstraints="NO" id="07J-oG-bcX">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="656"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <dataDetectorType key="dataDetectorTypes" phoneNumber="YES" link="YES" address="YES" calendarEvent="YES"/>
                             </webView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="07J-oG-bcX" secondAttribute="trailing" id="KSM-DK-F9A"/>
+                            <constraint firstAttribute="centerX" secondItem="07J-oG-bcX" secondAttribute="centerX" id="Lam-au-Dao"/>
+                            <constraint firstItem="07J-oG-bcX" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" id="eW6-TM-Ubn"/>
+                            <constraint firstAttribute="bottom" secondItem="07J-oG-bcX" secondAttribute="bottom" id="qEL-lu-xKp"/>
+                            <constraint firstItem="07J-oG-bcX" firstAttribute="top" secondItem="kh9-bI-dsS" secondAttribute="top" id="sQa-vK-z2X"/>
+                        </constraints>
                     </view>
                     <toolbarItems>
                         <barButtonItem systemItem="rewind" id="fQL-og-pOG">

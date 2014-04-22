@@ -15,10 +15,10 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 
 @interface AppDelegate () <PBPebbleCentralDelegate>
 
-+ (NSArray*)chunkifyString:(NSString*)text;		// Break down the text into chunks small enough to send to the Pebble.
-+ (NSString*)formatString:(NSString*)chunk;		// Take a chunk and insert "- " if it's too long to fit on the screen of the Pebble.
++ (NSArray *)chunkifyString:(NSString *)text;		// Break down the text into chunks small enough to send to the Pebble.
++ (NSString *)formatString:(NSString *)chunk;		// Take a chunk and insert "- " if it's too long to fit on the screen of the Pebble.
 
-- (void)handleUpdateFromWatch:(PBWatch*)watch withUpdate:(NSDictionary*)update;
+- (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update;
 
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidConnect:(PBWatch *)watch isNew:(BOOL)isNew;
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidDisconnect:(PBWatch *)watch;
@@ -26,6 +26,8 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 @end
 
 @implementation AppDelegate
+
+// TODO: set tint color to black
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
@@ -51,7 +53,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 
 /** Takes a string and splits it into words
  */
-+ (NSArray*)chunkifyString:(NSString *)text {
++ (NSArray *)chunkifyString:(NSString *)text {
 	if ([text length] == 0) {
 		return nil;
 	}
@@ -67,7 +69,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 }
 
 // Tested
-+ (NSString*)formatString:(NSString *)string {
++ (NSString *)formatString:(NSString *)string {
 	NSString *text = [string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	if ([text length] <= sMaxWordLength) {
 		return text;
