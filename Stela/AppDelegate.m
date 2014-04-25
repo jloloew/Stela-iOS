@@ -30,6 +30,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+	//TODO: fix on iOS 6
 	self.window.tintColor = [UIColor blackColor];
 	[[PBPebbleCentral defaultCentral] setDelegate:self];
 	// Set the UUID of the app

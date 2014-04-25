@@ -41,7 +41,7 @@
 	<key>UIStatusBarHidden</key>
 	<false/>
 	<key>UIStatusBarHidden~ipad</key>
-	<true/>
+	<false/>
 	<key>UISupportedExternalAccessoryProtocols</key>
 	<array>
 		<string>com.getpebble.public</string>

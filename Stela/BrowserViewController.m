@@ -46,6 +46,7 @@ static const CGFloat kAddressHeight = 24.0f;
     [super viewDidLoad];
 	self.webView.delegate = self;
 	self.webView.scalesPageToFit = YES;
+	self.webView.scrollView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;	//TODO fix on iOS 6
 	/* Create the page title label */
 	UINavigationBar *navBar = self.navigationController.navigationBar;
 	CGRect labelFrame = CGRectMake(kMargin, kSpacer, navBar.bounds.size.width - 2*kMargin, kLabelHeight);
@@ -57,9 +58,9 @@ static const CGFloat kAddressHeight = 24.0f;
 	[navBar addSubview:label];
 	self.pageTitle = label;
 	/* Create the address bar */
-	CGRect addressFrame = CGRectMake(kMargin, kSpacer*2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
+	CGRect addressFrame = CGRectMake(kMargin, kSpacer * 2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
-	address.text = @"about:blank";//@"https://en.wikipedia.org/wiki/Bubble_gum";
+	address.text = @"https://en.wikipedia.org/wiki/Bubble_gum";
 	[address setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 	[address setAutocorrectionType:UITextAutocorrectionTypeNo];
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
