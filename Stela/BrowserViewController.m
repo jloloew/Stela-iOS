@@ -7,7 +7,8 @@
 //
 
 #import "BrowserViewController.h"
-#import <MBProgressHUD.h>
+#import "TargetConditionals.h"
+//#import <MBProgressHUD.h>
 
 //static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
@@ -150,7 +151,11 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.forward.enabled = self.webView.canGoForward;
 	self.back.enabled = self.webView.canGoBack;
 	self.stop.enabled = self.webView.loading;
+#if TARGET_IPHONE_SIMULATOR
+	self.sendToPebble.enabled = YES;
+#else // TARGET_IPHONE_SIMULATOR
 	self.sendToPebble.enabled = [((AppDelegate*)[[UIApplication sharedApplication] delegate]).connectedWatch isConnected];
+#endif // TARGET_IPHONE_SIMULATOR
 }
 
 - (void)updateTitle:(UIWebView *)aWebView {
@@ -170,6 +175,7 @@ static const CGFloat kAddressHeight = 24.0f;
 #pragma mark Watch Stuff
 
 - (IBAction)sendToPebble:(id)sender {
+	/*
 	// Show the spinner to let the user know the button worked
 	NSLog(@"about to show spinner");
 	MBProgressHUD *progressHUD = [[MBProgressHUD alloc] initWithView:self.webView];
@@ -179,6 +185,15 @@ static const CGFloat kAddressHeight = 24.0f;
 	progressHUD.square = YES;
 	progressHUD.taskInProgress = YES;
 	[progressHUD show:YES];
+	 */
+	
+	// Instead of a spinner, show an alert.
+	[[[UIAlertView alloc] initWithTitle:@"Success"
+								message:@"Article now sending to Pebble."
+							   delegate:nil
+					  cancelButtonTitle:@"Gee, thanks!"
+					  otherButtonTitles:nil]
+	 show];
 	
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 	UIWebView *awebView = [[UIWebView alloc] init];
@@ -195,8 +210,10 @@ static const CGFloat kAddressHeight = 24.0f;
 	
 	[appDelegate sendURL:self.addressField.text toWatch:appDelegate.connectedWatch];
 	
+	/*
 	// Hide the progress spinner
 	[progressHUD hide:YES afterDelay:2.0];
+	 */
 }
 
 - (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
