@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import <MBProgressHUD.h>
 
 const static int sMaxTextChunkLength = 60;
 const static int sMaxWordLength = 8;
@@ -27,10 +28,9 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 
 @implementation AppDelegate
 
-// TODO: set tint color to black
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+	self.window.tintColor = [UIColor blackColor];
 	[[PBPebbleCentral defaultCentral] setDelegate:self];
 	// Set the UUID of the app
 	uuid_t stelaUUIDBytes;
@@ -120,6 +120,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
 		if (isAppMessagesSupported) {
 			NSLog(@"App messages is supported.");
+			
 			// Launch the watch app
 			[self.connectedWatch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
 				if (!error) {

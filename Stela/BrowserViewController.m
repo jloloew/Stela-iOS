@@ -7,6 +7,7 @@
 //
 
 #import "BrowserViewController.h"
+#import <MBProgressHUD.h>
 
 //static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
@@ -58,7 +59,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	/* Create the address bar */
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer*2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
-	address.text = @"https://en.wikipedia.org/wiki/Bubble_gum";
+	address.text = @"about:blank";//@"https://en.wikipedia.org/wiki/Bubble_gum";
 	[address setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 	[address setAutocorrectionType:UITextAutocorrectionTypeNo];
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -113,6 +114,14 @@ static const CGFloat kAddressHeight = 24.0f;
 	}
 }
 
+- (void)displayLoadingSpinner {
+//	UIActivityIndicatorView
+}
+
+- (void)hideLoadingSpinner {
+	
+}
+
 #pragma mark Browser Stuff
 
 - (void)loadRequestFromAddressField:(id)addressField {
@@ -160,6 +169,16 @@ static const CGFloat kAddressHeight = 24.0f;
 #pragma mark Watch Stuff
 
 - (IBAction)sendToPebble:(id)sender {
+	// Show the spinner to let the user know the button worked
+	NSLog(@"about to show spinner");
+	MBProgressHUD *progressHUD = [[MBProgressHUD alloc] initWithView:self.webView];
+	progressHUD.labelText = @"Downloading article";
+	progressHUD.animationType = MBProgressHUDAnimationFade;
+	progressHUD.minShowTime = 1.0;
+	progressHUD.square = YES;
+	progressHUD.taskInProgress = YES;
+	[progressHUD show:YES];
+	
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 	UIWebView *awebView = [[UIWebView alloc] init];
 	awebView.hidden = YES;
@@ -174,6 +193,9 @@ static const CGFloat kAddressHeight = 24.0f;
 	return;
 	
 	[appDelegate sendURL:self.addressField.text toWatch:appDelegate.connectedWatch];
+	
+	// Hide the progress spinner
+	[progressHUD hide:YES afterDelay:2.0];
 }
 
 - (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
