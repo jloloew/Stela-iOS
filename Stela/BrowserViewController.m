@@ -16,7 +16,7 @@
 static const CGFloat kLabelHeight = 14.0f;
 static const CGFloat kMargin = 10.0f;
 static const CGFloat kSpacer = 2.0f;
-//static const CGFloat kLabelFontSize = 12.0f;
+static const CGFloat kLabelFontSize = 12.0f;
 static const CGFloat kAddressHeight = 24.0f;
 
 
@@ -61,7 +61,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	UILabel *label = [[UILabel alloc] initWithFrame:labelFrame];
 	label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	label.backgroundColor = [UIColor clearColor];
-	label.font = [UIFont systemFontOfSize:12];
+	label.font = [UIFont systemFontOfSize:kLabelFontSize];
 	label.textAlignment = NSTextAlignmentCenter;
 	[navBar addSubview:label];
 	self.pageTitle = label;
@@ -69,7 +69,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	/* Create the address bar */
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer * 2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
-	address.text = @"https://en.wikipedia.org/wiki/Bubble_gum";
+	address.text = @"https://en.wikipedia.org/wiki/Pebble_watch";
 	[address setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 	[address setAutocorrectionType:UITextAutocorrectionTypeNo];
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
