@@ -7,7 +7,9 @@
 //
 
 #import "BrowserViewController.h"
-#import "TargetConditionals.h"
+#ifdef __APPLE__
+	#import "TargetConditionals.h"
+#endif // __APPLE__
 //#import <MBProgressHUD.h>
 
 //static const CGFloat kNavBarHeight = 52.0f;
