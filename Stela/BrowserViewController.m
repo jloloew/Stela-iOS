@@ -85,7 +85,7 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (NSString*)getParsedText {
 	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
-	NSError *__autoreleasing *error;
+	NSError *__autoreleasing *error = NULL;
 	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:error];
 	if (!error) {
 		if(debug)
