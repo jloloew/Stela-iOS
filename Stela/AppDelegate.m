@@ -7,7 +7,6 @@
 //
 
 #import "AppDelegate.h"
-#import <MBProgressHUD.h>
 
 const static int sMaxTextChunkLength = 60;
 const static int sMaxWordLength = 8;
@@ -165,37 +164,43 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 }
 
 - (void)sendURL:(NSString *)urlString toWatch:(PBWatch *)watch {
-	if(debug)
-		NSLog(@"Called AppDelegate sendURL toWatch");
-	
+	//TODO: figure out if I need this method
 	if (![watch isConnected]) {
-		NSLog(@"AppDelegate sendURL toWatch: No watch connected");
-	} else {
-		// Check to see if app messages is supported before sending anything
-		[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isSupported) {
-			if (!isSupported) {
-				NSLog(@"AppDelegate sendURL toWatch: App messages not supported!");
-			} else {
-				// Launch Stela on the Pebble
-				[watch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
+		NSLog(@"AppDelegate pushString toWatch: Error: watch not connected!");
+		return;
+	}
+	
+	[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
+		if (isAppMessagesSupported) {
+			NSLog(@"App messages is supported.");
+			
+			// Launch the watch app
+			[self.connectedWatch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
+				if (!error) {
+					NSLog(@"Successfully launched app.");
+				} else {
+					NSLog(@"Error launching app - Error: %@", error);
+				}
+			}];
+			NSDictionary *urlDict = @{ @(0): urlString };
+			[self.connectedWatch appMessagesPushUpdate:urlDict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
 					if (!error) {
-						// Finally push the URL to the Pebble
-						[watch appMessagesPushUpdate:@{ @(URL_STRING_DICTIONARY_KEY): urlString } onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-							if (!error) {
-								if(debug)
-									NSLog(@"AppDelegate sendURL toWatch: Successfully pushed update: %@", update);
-							} else {
-								NSLog(@"AppDelegate sendURL toWatch: Error: %@ while pushing update: %@", error, update);
-							}
-						}];
+						NSLog(@"Successfully sent URL.");
 					} else {
-						NSLog(@"AppDelegate sendURL toWatch: Failed to launch Stela on the Pebble: %@", error);
+						NSLog(@"Error sending URL: %@", error);
 					}
 				}];
-			}
-		}];
-	}
+//			[self.connectedWatch closeSession:^(void) {
+//				NSLog(@"Session closed.");
+//			}];
+		} else {
+			NSLog(@"App messages not supported!");
+		}
+	}];
 }
+
+
+
 
 - (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update {
 	if(debug)

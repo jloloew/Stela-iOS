@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		30C7A2ED6EB340928804CEC9 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 38B9271610CA482295C4AE2E /* libPods.a */; };
 		B81DA2AD18F8C61800C49C21 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2AC18F8C61800C49C21 /* Foundation.framework */; };
 		B81DA2AF18F8C61800C49C21 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2AE18F8C61800C49C21 /* CoreGraphics.framework */; };
 		B81DA2B118F8C61800C49C21 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2B018F8C61800C49C21 /* UIKit.framework */; };
@@ -33,6 +32,7 @@
 		B81DA2F318F8C6FD00C49C21 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2F218F8C6FD00C49C21 /* MessageUI.framework */; };
 		B86E1B2C18F8C84800FAD644 /* BrowserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B86E1B2B18F8C84800FAD644 /* BrowserViewController.m */; };
 		B86E1B2F18F90BAA00FAD644 /* ArticlePull.js in Resources */ = {isa = PBXBuildFile; fileRef = B86E1B2D18F9007500FAD644 /* ArticlePull.js */; };
+		B87C074219257941006F3596 /* libMBProgressHUD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B87C074119257712006F3596 /* libMBProgressHUD.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,11 +43,23 @@
 			remoteGlobalIDString = B81DA2A818F8C61800C49C21;
 			remoteInfo = Stela;
 		};
+		B87C074019257712006F3596 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B87C071E19257712006F3596 /* MBProgressHUD.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D286A7491518C70F00E13FB8;
+			remoteInfo = MBProgressHUD;
+		};
+		B87C074319257959006F3596 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B87C071E19257712006F3596 /* MBProgressHUD.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D286A7481518C70F00E13FB8;
+			remoteInfo = MBProgressHUD;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		38B9271610CA482295C4AE2E /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		A764B64B71DD40D595199035 /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = "<group>"; };
 		B81DA2A918F8C61800C49C21 /* Stela.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stela.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B81DA2AC18F8C61800C49C21 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		B81DA2AE18F8C61800C49C21 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -79,6 +91,7 @@
 		B86E1B2A18F8C84800FAD644 /* BrowserViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrowserViewController.h; sourceTree = "<group>"; };
 		B86E1B2B18F8C84800FAD644 /* BrowserViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BrowserViewController.m; sourceTree = "<group>"; };
 		B86E1B2D18F9007500FAD644 /* ArticlePull.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = ArticlePull.js; sourceTree = "<group>"; };
+		B87C071E19257712006F3596 /* MBProgressHUD.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = MBProgressHUD.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,6 +99,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B87C074219257941006F3596 /* libMBProgressHUD.a in Frameworks */,
 				B81DA2F318F8C6FD00C49C21 /* MessageUI.framework in Frameworks */,
 				B81DA2EF18F8C6F300C49C21 /* CFNetwork.framework in Frameworks */,
 				B81DA2F018F8C6F300C49C21 /* CoreBluetooth.framework in Frameworks */,
@@ -97,7 +111,6 @@
 				B81DA2E518F8C69400C49C21 /* PebbleKit.framework in Frameworks */,
 				B81DA2B118F8C61800C49C21 /* UIKit.framework in Frameworks */,
 				B81DA2AD18F8C61800C49C21 /* Foundation.framework in Frameworks */,
-				30C7A2ED6EB340928804CEC9 /* libPods.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,11 +130,11 @@
 		B81DA2A018F8C61800C49C21 = {
 			isa = PBXGroup;
 			children = (
+				B87C06F919257712006F3596 /* MBProgressHUD */,
 				B81DA2B218F8C61800C49C21 /* Stela */,
 				B81DA2D418F8C61800C49C21 /* StelaTests */,
 				B81DA2AB18F8C61800C49C21 /* Frameworks */,
 				B81DA2AA18F8C61800C49C21 /* Products */,
-				A764B64B71DD40D595199035 /* Pods.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -149,7 +162,6 @@
 				B81DA2AE18F8C61800C49C21 /* CoreGraphics.framework */,
 				B81DA2B018F8C61800C49C21 /* UIKit.framework */,
 				B81DA2CE18F8C61800C49C21 /* XCTest.framework */,
-				38B9271610CA482295C4AE2E /* libPods.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -203,6 +215,22 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		B87C06F919257712006F3596 /* MBProgressHUD */ = {
+			isa = PBXGroup;
+			children = (
+				B87C071E19257712006F3596 /* MBProgressHUD.xcodeproj */,
+			);
+			path = MBProgressHUD;
+			sourceTree = "<group>";
+		};
+		B87C071F19257712006F3596 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B87C074119257712006F3596 /* libMBProgressHUD.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		B8B65B64190A5963002ADC6E /* Icon */ = {
 			isa = PBXGroup;
 			children = (
@@ -224,16 +252,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B81DA2DE18F8C61800C49C21 /* Build configuration list for PBXNativeTarget "Stela" */;
 			buildPhases = (
-				2B8D1FB05A444395AEE8B169 /* Check Pods Manifest.lock */,
 				B81DA2A518F8C61800C49C21 /* Sources */,
 				B81DA2A618F8C61800C49C21 /* Frameworks */,
 				B81DA2A718F8C61800C49C21 /* Resources */,
 				B89600E618F9852900E0CAE4 /* ShellScript */,
-				64B783B920A242CD8603D4B9 /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B87C074419257959006F3596 /* PBXTargetDependency */,
 			);
 			name = Stela;
 			productName = Stela;
@@ -286,6 +313,12 @@
 			mainGroup = B81DA2A018F8C61800C49C21;
 			productRefGroup = B81DA2AA18F8C61800C49C21 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = B87C071F19257712006F3596 /* Products */;
+					ProjectRef = B87C071E19257712006F3596 /* MBProgressHUD.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				B81DA2A818F8C61800C49C21 /* Stela */,
@@ -293,6 +326,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		B87C074119257712006F3596 /* libMBProgressHUD.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libMBProgressHUD.a;
+			remoteRef = B87C074019257712006F3596 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B81DA2A718F8C61800C49C21 /* Resources */ = {
@@ -318,36 +361,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2B8D1FB05A444395AEE8B169 /* Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		64B783B920A242CD8603D4B9 /* Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Pods-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		B89600E618F9852900E0CAE4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -368,10 +381,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B81DA2C618F8C61800C49C21 /* ViewController.m in Sources */,
-				B86E1B2C18F8C84800FAD644 /* BrowserViewController.m in Sources */,
 				B81DA2BD18F8C61800C49C21 /* AppDelegate.m in Sources */,
+				B86E1B2C18F8C84800FAD644 /* BrowserViewController.m in Sources */,
 				B81DA2B918F8C61800C49C21 /* main.m in Sources */,
+				B81DA2C618F8C61800C49C21 /* ViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,6 +403,11 @@
 			isa = PBXTargetDependency;
 			target = B81DA2A818F8C61800C49C21 /* Stela */;
 			targetProxy = B81DA2D218F8C61800C49C21 /* PBXContainerItemProxy */;
+		};
+		B87C074419257959006F3596 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MBProgressHUD;
+			targetProxy = B87C074319257959006F3596 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -461,7 +479,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -494,7 +512,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -503,7 +521,6 @@
 		};
 		B81DA2DF18F8C61800C49C21 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A764B64B71DD40D595199035 /* Pods.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -518,13 +535,13 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
 		};
 		B81DA2E018F8C61800C49C21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A764B64B71DD40D595199035 /* Pods.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -539,6 +556,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VERSIONING_SYSTEM = "apple-generic";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

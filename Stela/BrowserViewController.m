@@ -10,7 +10,7 @@
 #ifdef __APPLE__
 	#import "TargetConditionals.h"
 #endif // __APPLE__
-//#import <MBProgressHUD.h>
+#import <MBProgressHUD/MBProgressHUD.h>
 
 //static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
@@ -32,13 +32,15 @@ static const CGFloat kAddressHeight = 24.0f;
 @property (strong, nonatomic) UILabel *pageTitle;
 @property (strong, nonatomic) UITextField *addressField;
 
-- (NSString*)getParsedText;	// Injects JavaScript
+@property (strong, nonatomic) MBProgressHUD *progressHUD;
+
+- (NSString *)getParsedText;	// Injects JavaScript
 - (void)loadRequestFromString:(NSString*)urlString;
 - (void)updateButtons;
 - (void)loadRequestFromAddressField:(id)addressField;
 - (void)updateAddress:(NSURLRequest*)request;
-- (void)updateTitle:(UIWebView*)aWebView;
-- (void)informError:(NSError*)error;
+- (void)updateTitle:(UIWebView *)aWebView;
+- (void)informError:(NSError *)error;
 
 @end
 
@@ -82,6 +84,8 @@ static const CGFloat kAddressHeight = 24.0f;
 	  forControlEvents:UIControlEventEditingDidEndOnExit];
 	[navBar addSubview:address];
 	self.addressField = address;
+	
+	self.progressHUD = nil;
 	
 	((AppDelegate*)([UIApplication sharedApplication].delegate)).delegate = self;
 
@@ -183,18 +187,9 @@ static const CGFloat kAddressHeight = 24.0f;
 #pragma mark Watch Stuff
 
 - (IBAction)sendToPebble:(id)sender {
-	/*
-	// Show the spinner to let the user know the button worked
-	NSLog(@"about to show spinner");
-	MBProgressHUD *progressHUD = [[MBProgressHUD alloc] initWithView:self.webView];
-	progressHUD.labelText = @"Downloading article";
-	progressHUD.animationType = MBProgressHUDAnimationFade;
-	progressHUD.minShowTime = 1.0;
-	progressHUD.square = YES;
-	progressHUD.taskInProgress = YES;
-	[progressHUD show:YES];
-	 */
+	//TODO: fix all this, see what works.
 	
+	/*
 	// Instead of a spinner, show an alert.
 	[[[UIAlertView alloc] initWithTitle:@"Success"
 								message:@"Article now sending to Pebble."
@@ -202,26 +197,28 @@ static const CGFloat kAddressHeight = 24.0f;
 					  cancelButtonTitle:@"Gee, thanks!"
 					  otherButtonTitles:nil]
 	 show];
+	*/
+	
+	// Start a spinner so the user knows something's happening
+	self.progressHUD = [MBProgressHUD showHUDAddedTo:self.webView animated:YES];
+	self.progressHUD.labelText = @"Sending...";
 	
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 	UIWebView *awebView = [[UIWebView alloc] init];
 	awebView.hidden = YES;
 	[awebView loadHTMLString:@"<script src=\"ArticlePull.js\"></script>" baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] resourcePath]]];
-	NSString *function = [[NSString alloc] initWithFormat: @"getText(%@)", self.addressField.text];
-	NSString *result = [awebView stringByEvaluatingJavaScriptFromString:function];
-	[appDelegate pushString:result toWatch:appDelegate.connectedWatch];
-	UIColor *original = self.sendToPebble.tintColor;
-	self.sendToPebble.tintColor = [UIColor greenColor];
-	sleep(2);
-	self.sendToPebble.tintColor = original;
-	return;
+//	NSString *function = [[NSString alloc] initWithFormat: @"getText(%@)", self.addressField.text];
+//	NSString *result = [awebView stringByEvaluatingJavaScriptFromString:function];
+//	[appDelegate pushString:result toWatch:appDelegate.connectedWatch];
+//	UIColor *original = self.sendToPebble.tintColor;
+//	self.sendToPebble.tintColor = [UIColor greenColor];
+//	sleep(2);
+//	self.sendToPebble.tintColor = original;
+//	return;
 	
 	[appDelegate sendURL:self.addressField.text toWatch:appDelegate.connectedWatch];
 	
-	/*
-	// Hide the progress spinner
-	[progressHUD hide:YES afterDelay:2.0];
-	 */
+	[MBProgressHUD hideHUDForView:self.webView animated:YES];
 }
 
 - (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
