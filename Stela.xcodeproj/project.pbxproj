@@ -23,8 +23,6 @@
 		B81DA2D118F8C61800C49C21 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2B018F8C61800C49C21 /* UIKit.framework */; };
 		B81DA2D918F8C61800C49C21 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B81DA2D718F8C61800C49C21 /* InfoPlist.strings */; };
 		B81DA2DB18F8C61800C49C21 /* StelaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B81DA2DA18F8C61800C49C21 /* StelaTests.m */; };
-		B81DA2E518F8C69400C49C21 /* PebbleKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2E418F8C69400C49C21 /* PebbleKit.framework */; };
-		B81DA2E718F8C6B200C49C21 /* PebbleVendor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2E618F8C6B200C49C21 /* PebbleVendor.framework */; };
 		B81DA2E918F8C6CF00C49C21 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2E818F8C6CF00C49C21 /* ExternalAccessory.framework */; };
 		B81DA2EB18F8C6DA00C49C21 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2EA18F8C6DA00C49C21 /* libz.dylib */; };
 		B81DA2EF18F8C6F300C49C21 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2EC18F8C6F300C49C21 /* CFNetwork.framework */; };
@@ -69,8 +67,6 @@
 		B81DA2D618F8C61800C49C21 /* StelaTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "StelaTests-Info.plist"; sourceTree = "<group>"; };
 		B81DA2D818F8C61800C49C21 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B81DA2DA18F8C61800C49C21 /* StelaTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StelaTests.m; sourceTree = "<group>"; };
-		B81DA2E418F8C69400C49C21 /* PebbleKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PebbleKit.framework; sourceTree = "<group>"; };
-		B81DA2E618F8C6B200C49C21 /* PebbleVendor.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = PebbleVendor.framework; sourceTree = "<group>"; };
 		B81DA2E818F8C6CF00C49C21 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		B81DA2EA18F8C6DA00C49C21 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		B81DA2EC18F8C6F300C49C21 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
@@ -94,8 +90,6 @@
 				B81DA2EB18F8C6DA00C49C21 /* libz.dylib in Frameworks */,
 				B81DA2E918F8C6CF00C49C21 /* ExternalAccessory.framework in Frameworks */,
 				B81DA2AF18F8C61800C49C21 /* CoreGraphics.framework in Frameworks */,
-				B81DA2E718F8C6B200C49C21 /* PebbleVendor.framework in Frameworks */,
-				B81DA2E518F8C69400C49C21 /* PebbleKit.framework in Frameworks */,
 				B81DA2B118F8C61800C49C21 /* UIKit.framework in Frameworks */,
 				B81DA2AD18F8C61800C49C21 /* Foundation.framework in Frameworks */,
 				1CDB164A2C60488396E11100 /* libPods.a in Frameworks */,
@@ -153,8 +147,6 @@
 				B81DA2EE18F8C6F300C49C21 /* CoreMotion.framework */,
 				B81DA2EA18F8C6DA00C49C21 /* libz.dylib */,
 				B81DA2E818F8C6CF00C49C21 /* ExternalAccessory.framework */,
-				B81DA2E618F8C6B200C49C21 /* PebbleVendor.framework */,
-				B81DA2E418F8C69400C49C21 /* PebbleKit.framework */,
 				B81DA2AC18F8C61800C49C21 /* Foundation.framework */,
 				B81DA2AE18F8C61800C49C21 /* CoreGraphics.framework */,
 				B81DA2B018F8C61800C49C21 /* UIKit.framework */,
