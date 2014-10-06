@@ -53,6 +53,15 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
     return YES;
 }
 
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+	// close the session so other apps can use Pebble too
+	[self.connectedWatch closeSession:^(void) {
+#if DEBUG
+		NSLog(@"Session closed.");
+#endif
+	}];
+}
+
 #pragma mark String Stuff
 
 /** Takes a string and splits it into words
@@ -147,10 +156,8 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 			for (NSString *chunkString in chunks) {
 				NSDictionary *chunkDict = @{ @(0): chunkString };
 				[self.connectedWatch appMessagesPushUpdate:chunkDict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-					if (!error) {
-						NSLog(@"Successfully sent chunk.");
-					} else {
-						NSLog(@"Error sending chunk: %@", error);
+					if (error) {
+						NSLog(@"Error sending chunk: %@", error.localizedDescription);
 					}
 				}];
 			}
@@ -164,58 +171,59 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 }
 
 - (void)sendURL:(NSString *)urlString toWatch:(PBWatch *)watch {
-	//TODO: figure out if I need this method
 	if (![watch isConnected]) {
 		NSLog(@"AppDelegate pushString toWatch: Error: watch not connected!");
 		return;
 	}
 	
 	[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
-		if (isAppMessagesSupported) {
-			NSLog(@"App messages is supported.");
-			
-			// Launch the watch app
-			[self.connectedWatch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
-				if (!error) {
-					NSLog(@"Successfully launched app.");
-				} else {
-					NSLog(@"Error launching app - Error: %@", error);
-				}
-			}];
-			NSDictionary *urlDict = @{ @(0): urlString };
-			[self.connectedWatch appMessagesPushUpdate:urlDict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-					if (!error) {
-						NSLog(@"Successfully sent URL.");
-					} else {
-						NSLog(@"Error sending URL: %@", error);
-					}
-				}];
-//			[self.connectedWatch closeSession:^(void) {
-//				NSLog(@"Session closed.");
-//			}];
-		} else {
+		if (!isAppMessagesSupported) {
 			NSLog(@"App messages not supported!");
+			return;
 		}
+		
+		// Launch the watch app
+		[watch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
+			if (error) {
+				NSLog(@"Error launching watch app: %@", error.localizedDescription);
+			}
+		}];
+		NSDictionary *urlDict = @{ @(0): urlString };
+		[watch appMessagesPushUpdate:urlDict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+			if (error) {
+				NSLog(@"Error sending URL: %@", error.localizedDescription);
+			}
+		}];
+		
+//		// close the session so other apps can use Pebble too
+//		[watch closeSession:^(void) {
+//#if DEBUG
+//			NSLog(@"Session closed.");
+//#endif
+//		}];
 	}];
 }
 
-
-
-
 - (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update {
-	if(debug)
-		NSLog(@"Received update: %@", update);
+#if DEBUG
+	NSLog(@"Received update: %@", update);
+#endif
 }
 
 #pragma mark PBPebbleCentralDelegate methods
+
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidConnect:(PBWatch *)watch isNew:(BOOL)isNew {
+#if DEBUG
 	NSLog(@"Pebble connected: %@", [watch name]);
+#endif
 	self.connectedWatch = watch;
 	[self.delegate watch:watch didChangeConnectionStateToConnected:YES];
 }
 
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidDisconnect:(PBWatch *)watch {
+#if DEBUG
 	NSLog(@"Pebble disconnected: %@", [watch name]);
+#endif
 	if (self.connectedWatch == watch || [watch isEqual:self.connectedWatch]) {
 		self.connectedWatch = nil;
 	}
