@@ -3,7 +3,7 @@ PODS:
   - PebbleKit (2.4)
 
 DEPENDENCIES:
-  - MBProgressHUD (~> 0.8)
+  - MBProgressHUD (~> 0.9)
   - PebbleKit (~> 2.4)
 
 SPEC CHECKSUMS:
