@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="5056" systemVersion="13D45a" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="OTF-Pz-UFk">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="OTF-Pz-UFk">
     <dependencies>
-        <deployment defaultVersion="1536" identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
     </dependencies>
     <scenes>
         <!--Browser View Controller-->
@@ -16,45 +16,14 @@
                     <view key="view" contentMode="scaleToFill" id="kh9-bI-dsS">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <subviews>
-                            <webView contentMode="scaleToFill" mediaPlaybackRequiresUserAction="NO" translatesAutoresizingMaskIntoConstraints="NO" id="07J-oG-bcX">
-                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                <dataDetectorType key="dataDetectorTypes" phoneNumber="YES" link="YES" address="YES" calendarEvent="YES"/>
-                            </webView>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstAttribute="bottom" secondItem="07J-oG-bcX" secondAttribute="bottom" id="0Ys-Ih-Ch5"/>
-                            <constraint firstAttribute="trailing" secondItem="07J-oG-bcX" secondAttribute="trailing" id="KSM-DK-F9A"/>
-                            <constraint firstAttribute="centerX" secondItem="07J-oG-bcX" secondAttribute="centerX" id="Lam-au-Dao"/>
-                            <constraint firstItem="07J-oG-bcX" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" id="Swz-Ww-Xyk"/>
-                            <constraint firstItem="07J-oG-bcX" firstAttribute="top" secondItem="kh9-bI-dsS" secondAttribute="top" id="Uvw-Qh-8v0"/>
-                            <constraint firstAttribute="trailing" secondItem="07J-oG-bcX" secondAttribute="trailing" id="VOu-HE-Evy"/>
-                            <constraint firstItem="07J-oG-bcX" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" id="eW6-TM-Ubn"/>
-                            <constraint firstAttribute="bottom" secondItem="07J-oG-bcX" secondAttribute="bottom" id="qEL-lu-xKp"/>
-                            <constraint firstItem="07J-oG-bcX" firstAttribute="top" secondItem="kh9-bI-dsS" secondAttribute="top" id="sQa-vK-z2X"/>
-                        </constraints>
                     </view>
                     <toolbarItems>
-                        <barButtonItem systemItem="rewind" id="fQL-og-pOG">
-                            <connections>
-                                <action selector="goBack" destination="07J-oG-bcX" id="7ul-wv-Noa"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem systemItem="rewind" id="fQL-og-pOG"/>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="F1E-No-bJE"/>
-                        <barButtonItem systemItem="stop" id="hEZ-nu-SSL">
-                            <connections>
-                                <action selector="stopLoading" destination="07J-oG-bcX" id="SOj-Ry-InZ"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem systemItem="stop" id="hEZ-nu-SSL"/>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="kf4-Tg-9Ii"/>
-                        <barButtonItem systemItem="refresh" id="kA6-ou-E2s">
-                            <connections>
-                                <action selector="reload" destination="07J-oG-bcX" id="fI5-Ux-Fav"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem systemItem="refresh" id="kA6-ou-E2s"/>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="ne4-l5-xwz"/>
                         <barButtonItem title="Stela" id="ABn-b8-fuF">
                             <connections>
@@ -62,11 +31,7 @@
                             </connections>
                         </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="wz8-PE-3nf"/>
-                        <barButtonItem systemItem="fastForward" id="Pxn-Wt-Pof">
-                            <connections>
-                                <action selector="goForward" destination="07J-oG-bcX" id="J7t-Bc-Htz"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem systemItem="fastForward" id="Pxn-Wt-Pof"/>
                     </toolbarItems>
                     <navigationItem key="navigationItem" id="sZp-S7-tMI"/>
                     <connections>
@@ -75,7 +40,6 @@
                         <outlet property="refresh" destination="kA6-ou-E2s" id="nDS-fe-EnD"/>
                         <outlet property="sendToPebble" destination="ABn-b8-fuF" id="be4-mh-zsI"/>
                         <outlet property="stop" destination="hEZ-nu-SSL" id="DhI-F5-mwH"/>
-                        <outlet property="webView" destination="07J-oG-bcX" id="WKO-0G-XnI"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>

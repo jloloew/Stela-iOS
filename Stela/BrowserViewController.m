@@ -7,9 +7,9 @@
 //
 
 #import "BrowserViewController.h"
-#ifdef __APPLE__
-	#import "TargetConditionals.h"
-#endif // __APPLE__
+@import UIKit;
+@import WebKit;
+#import "TargetConditionals.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 
 //static const CGFloat kNavBarHeight = 52.0f;
@@ -20,9 +20,9 @@ static const CGFloat kLabelFontSize = 12.0f;
 static const CGFloat kAddressHeight = 24.0f;
 
 
-@interface BrowserViewController () <UIWebViewDelegate, UIGestureRecognizerDelegate, PebbleConnectionNoticeDelegate>
+@interface BrowserViewController () <UIGestureRecognizerDelegate, PebbleConnectionNoticeDelegate>
 
-@property (weak, nonatomic) IBOutlet UIWebView *webView;
+@property (nonatomic) WKWebView *webView;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *back;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *stop;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *refresh;
@@ -51,10 +51,33 @@ static const CGFloat kAddressHeight = 24.0f;
 {
     [super viewDidLoad];
 	
-	// web view
-	self.webView.delegate = self;
-	self.webView.scalesPageToFit = YES;
-	// This makes it work on iOS 6
+	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
+	NSError *__autoreleasing *error = NULL;
+	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:error];
+	if (error) {
+		NSLog(@"Error loading JavaScript from file to parse article.");
+		[[[UIAlertView alloc] initWithTitle:@"Error"
+									message:@"Error loading JavaScript from file to parse article."
+								   delegate:self
+						  cancelButtonTitle:@"OK"
+						  otherButtonTitles:nil] show];
+	}
+#if DEBUG
+	NSLog(@"Loaded js successfully");
+#endif
+	
+	WKUserScript *script = [[WKUserScript alloc] initWithSource:js
+												  injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
+											   forMainFrameOnly:YES];
+	WKUserContentController *contentController = [[WKUserContentController alloc] init];
+	[contentController addUserScript:script];
+	WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+	config.userContentController = contentController;
+	self.webView = [[WKWebView alloc] initWithFrame:self.view.bounds
+									  configuration:config];
+	self.webView.allowsBackForwardNavigationGestures = YES;
+	
+	self.view = self.webView;
 	NSString *sysver = [UIDevice currentDevice].systemVersion;
 	NSInteger systemVersion = [[sysver componentsSeparatedByString:@"."][0] integerValue];
 	if (systemVersion >= 7) {
@@ -119,37 +142,19 @@ static const CGFloat kAddressHeight = 24.0f;
 /**	Return the result of running Dave's JavaScript, which supposedly pulls the currently loaded article from the page.
  */
 - (NSString *)getParsedText {
-	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
-	NSError *__autoreleasing *error = NULL;
-	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:error];
-	if (error) {
-		NSLog(@"Error loading JavaScript from file to parse article.");
-		[[[UIAlertView alloc] initWithTitle:@"Error" message:@"Error loading JavaScript from file to parse article." delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
-		return @"Error";
-	}
-	
-#if DEBUG
-	NSLog(@"Loaded js successfully");
-#endif
-/*	// This is unnecessary because I just need to send the URL
-	// Wait until the page is done loading before trying to do anything
-	while ([self.webView isLoading]) {
-#if DEBUG
-		NSLog(@"getParsedText is waiting for the WebView to finish loading");
-#endif
-		sleep(1);
-	}
-*/
-	
-//	js = [NSString stringWithFormat:js, [NSString stringWithFormat:@"\"%@\"", self.addressField.text]];
-	[self.webView stringByEvaluatingJavaScriptFromString:js];
 	NSString *jsCall = [NSString stringWithFormat:@"getText(%@)", self.addressField.text];
-	NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:jsCall];
-//	NSString *parsedText = [self.webView stringByEvaluatingJavaScriptFromString:js];
+	NSString __block *parsedText = nil;
+	[self.webView evaluateJavaScript:jsCall
+				   completionHandler:^(id result, NSError *error) {
+					   if (error) {
+						   NSLog(@"Error evaluating JavaScript: %@", error);
+					   } else {
+						   parsedText = result;
+					   }
+				   }];
 #if DEBUG
 	NSLog(@"BrowserViewController getParsedText (line %d): Text returned by call to the JS parser: %@", __LINE__, parsedText);
 #endif
-	// Work around Dave's incompetence. Haha, Dave's incontinent. Wait...
 	return parsedText;
 }
 
