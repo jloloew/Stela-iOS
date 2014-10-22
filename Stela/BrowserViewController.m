@@ -226,16 +226,6 @@ static const CGFloat kAddressHeight = 24.0f;
 - (IBAction)sendToPebble:(id)sender {
 	//TODO: fix all this, see what works.
 	
-	/*
-	// Instead of a spinner, show an alert.
-	[[[UIAlertView alloc] initWithTitle:@"Success"
-								message:@"Article now sending to Pebble."
-							   delegate:nil
-					  cancelButtonTitle:@"Gee, thanks!"
-					  otherButtonTitles:nil]
-	 show];
-	*/
-	
 	// Start a spinner so the user knows something's happening
 	self.progressHUD = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
 	self.progressHUD.labelText = @"Sending...";
