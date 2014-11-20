@@ -17,7 +17,13 @@ const static BOOL debug = YES;
 //static NSString * const stelaUUIDString = @"70580e72-b262-4971-992d-9f89053fad11";		// original Stela
 static NSString * const stelaUUIDString = @"6db75b90-8dad-4490-94ca-0fef4296c78e";		// Stela-Linked
 
-@protocol PebbleConnectionNoticeDelegate;
+
+@protocol PebbleConnectionNoticeDelegate <NSObject>
+
+- (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected;
+
+@end
+
 
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
@@ -29,15 +35,6 @@ static NSString * const stelaUUIDString = @"6db75b90-8dad-4490-94ca-0fef4296c78e
 
 - (void)launchPebbleApp;
 - (void)killPebbleApp;
-//- (void)pushString:(NSString *)text toWatch:(PBWatch *)watch;
-//- (void)sendURL:(NSString *)urlString toWatch:(PBWatch *)watch;
 - (void)sendStringsToPebble:(NSArray*)words completion:(void(^)(BOOL success))handler;
-
-@end
-
-
-@protocol PebbleConnectionNoticeDelegate <NSObject>
-
-- (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected;
 
 @end

@@ -280,6 +280,12 @@ static const CGFloat kAddressHeight = 24.0f;
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 	[self updateButtons];
+	
+	// save the new URL
+	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+	appDelegate.currentURL = [webView.URL absoluteString];
+	//TODO: Use KVO to update the address bar
+	self.addressField.text = appDelegate.currentURL;
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {

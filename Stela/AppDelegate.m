@@ -12,8 +12,12 @@ const static int sMaxTextChunkLength = 60;
 const static int sMaxWordLength = 8;
 const static int sPebbleStorageCapacity = 50000;	// 50KB
 
+static NSString * SAVED_URL_KEY = @"savedURL";
+
 
 @interface AppDelegate () <PBPebbleCentralDelegate>
+
+- (BOOL)isValidStelaURL:(NSURL *)url;
 
 + (NSArray *)chunkifyString:(NSString *)text;		// Break down the text into chunks small enough to send to the Pebble.
 + (NSString *)formatString:(NSString *)chunk;		// Take a chunk and insert "- " if it's too long to fit on the screen of the Pebble.
@@ -23,32 +27,32 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidConnect:(PBWatch *)watch isNew:(BOOL)isNew;
 - (void)pebbleCentral:(PBPebbleCentral *)central watchDidDisconnect:(PBWatch *)watch;
 
+- (void)setUpPebble;
+
 @end
+
+
 
 @implementation AppDelegate
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-	// This makes it work on iOS 6
-	BOOL systemVersioniOS6 = [[UIDevice currentDevice].systemVersion characterAtIndex:0] == '6';
-	if (!systemVersioniOS6) {
-		self.window.tintColor = [UIColor blackColor];
-	}
+// always keep the current URL saved in case of a crash
+- (void)setCurrentURL:(NSString *)currentURL {
+	_currentURL = currentURL;
 	
-	[[PBPebbleCentral defaultCentral] setDelegate:self];
-	// Set the UUID of the app
-	uuid_t stelaUUIDBytes;
-	NSUUID *stelaUUID = [[NSUUID alloc] initWithUUIDString:[NSString stringWithString:stelaUUIDString]];
-	[stelaUUID getUUIDBytes:stelaUUIDBytes];
-	[[PBPebbleCentral defaultCentral] setAppUUID:[NSData dataWithBytes:stelaUUIDBytes length:sizeof(uuid_t)]];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[defaults setObject:currentURL forKey:SAVED_URL_KEY];
 	
-    self.connectedWatch = [[PBPebbleCentral defaultCentral] lastConnectedWatch];
-	NSLog(@"Last connected watch: %@", self.connectedWatch);
+	//TODO: load the URL
+}
+
+
+#pragma mark - App lifecycle
+
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+	self.window.tintColor = [UIColor blackColor];
 	
-	[self.connectedWatch appMessagesAddReceiveUpdateHandler:^BOOL(PBWatch *watch, NSDictionary *update) {
-		[self handleUpdateFromWatch:watch withUpdate:update];
-		return YES;
-	}];
+	[self setUpPebble];
 	
     return YES;
 }
@@ -62,13 +66,72 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	}];
 }
 
-- (void)applicationWillTerminate:(UIApplication *)application {
-	// save the current page to reload on next launch
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	[defaults setObject:self.currentURL forKey:@"savedURL"];
+
+#pragma mark URL stuff
+
+
+- (BOOL)isValidStelaURL:(NSURL *)url {
+	if ([url isFileURL]) {
+		return NO;
+	}
+	if ([[url scheme] isEqualToString:@"stela"] || [[url scheme] isEqualToString:@"stelas"]) {
+		if ([[url host] isEqualToString:@""]) { // not a valid webpage
+			return NO;
+		}
+		
+		return YES;
+	}
+	
+	return NO;
 }
 
+
+// make sure we can open the URL passed in, if any.
+- (BOOL)application:(UIApplication *)application
+willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+	NSURL *url = [launchOptions valueForKey:UIApplicationLaunchOptionsURLKey];
+	if (url) {
+		if (![self isValidStelaURL:url]) {
+			return NO;
+		}
+	}
+	
+	return YES;
+}
+
+// Actually go and open the URL passed in.
+- (BOOL)application:(UIApplication *)application
+			openURL:(NSURL *)url
+  sourceApplication:(NSString *)sourceApplication
+		 annotation:(id)annotation
+{
+	if (![self isValidStelaURL:url]) {
+		return NO;
+	}
+	
+	// replace stela:// with http://
+	NSString *urlString = [url absoluteString];
+	if ([[url scheme] isEqualToString:@"stelas"]) { // https
+		NSRange stelaRange = NSMakeRange(0, @"stelas".length);
+		urlString = [urlString stringByReplacingCharactersInRange:stelaRange withString:@"https"];
+	} else if ([[url scheme] isEqualToString:@"stela"]) { // http
+		NSRange stelaRange = NSMakeRange(0, @"stela".length);
+		urlString = [urlString stringByReplacingCharactersInRange:stelaRange withString:@"http"];
+	} else { // unreachable
+		NSLog(@"Unreachable code path reached! %s %d %s", __FILE__, __LINE__, __PRETTY_FUNCTION__);
+		exit(EXIT_FAILURE);
+	}
+	
+	self.currentURL = urlString;
+	//TODO: start to load the URL
+	
+	return YES;
+}
+
+
 #pragma mark String Stuff
+
 
 /** Takes a string and splits it into words
  */
@@ -76,7 +139,8 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	if ([text length] == 0) {
 		return nil;
 	}
-	NSMutableArray *chunks = [NSMutableArray arrayWithArray:[text componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+	NSArray *_chunks = [text componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSMutableArray *chunks = [NSMutableArray arrayWithArray:_chunks];
 	for (int i = 0; i < [chunks count]; i++) {
 		chunks[i] = [AppDelegate formatString:chunks[i]];
 		if ([chunks[i] length] > sMaxTextChunkLength) {
@@ -86,6 +150,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	}
 	return chunks;
 }
+
 
 // Tested
 + (NSString *)formatString:(NSString *)string {
@@ -106,12 +171,16 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	return result;
 }
 
+
 #pragma mark Watch Stuff
+
 
 - (void)launchPebbleApp {
 	[self.connectedWatch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
 		if (!error) {
+#if DEBUG
 			NSLog(@"Successfully launched app.");
+#endif
 		} else {
 			NSLog(@"Error launching app - error: %@", error);
 		}
@@ -121,97 +190,27 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 - (void)killPebbleApp {
 	[self.connectedWatch appMessagesKill:^(PBWatch *watch, NSError *error) {
 		if (!error) {
+#if DEBUG
 			NSLog(@"Successfully killed app.");
+#endif
 		} else {
 			NSLog(@"Error killing app - error: %@", error);
 		}
-	}
-	 ];
-}
-
-- (void)pushString:(NSString *)text toWatch:(PBWatch *)watch {
-	if (![watch isConnected]) {
-		NSLog(@"AppDelegate pushString toWatch: Error: watch not connected!");
-		return;
-	}
-	
-	[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
-		if (isAppMessagesSupported) {
-			NSLog(@"App messages is supported.");
-			
-			// Launch the watch app
-			[self.connectedWatch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
-				if (!error) {
-					NSLog(@"Successfully launched app.");
-				} else {
-					NSLog(@"Error launching app - Error: %@", error);
-				}
-			}];
-			// Get chunks small enough to send to Pebble
-			NSArray *chunks = [AppDelegate chunkifyString:text];
-			// Limit the amount of data that can be sent
-			if (sMaxTextChunkLength * [chunks count] > sPebbleStorageCapacity) {
-				NSLog(@"String is too long! Sending the first %d bytes.", sPebbleStorageCapacity);
-				NSRange subarrayRange;
-				subarrayRange.location = 0;
-				subarrayRange.length = sPebbleStorageCapacity / sMaxTextChunkLength;
-				chunks = [chunks subarrayWithRange:subarrayRange];
-			}
-			// Push each chunk to the watch
-			for (NSString *chunkString in chunks) {
-				NSDictionary *chunkDict = @{ @(0): chunkString };
-				[self.connectedWatch appMessagesPushUpdate:chunkDict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-					if (error) {
-						NSLog(@"Error sending chunk: %@", error.localizedDescription);
-					}
-				}];
-			}
-			[self.connectedWatch closeSession:^(void) {
-				NSLog(@"Session closed.");
-			}];
-		} else {
-			NSLog(@"App messages not supported!");
-		}
 	}];
 }
 
-- (void)sendURL:(NSString *)urlString toWatch:(PBWatch *)watch {
-	if (![watch isConnected]) {
-		NSLog(@"AppDelegate pushString toWatch: Error: watch not connected!");
-		return;
-	}
-	
-	[watch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
-		if (!isAppMessagesSupported) {
-			NSLog(@"App messages not supported!");
-			return;
-		}
-		
-		// Launch the watch app
-		[watch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
-			if (error) {
-				NSLog(@"Error launching watch app: %@", error.localizedDescription);
-			}
-		}];
-		NSDictionary *urlDict = @{ @(0): urlString };
-		[watch appMessagesPushUpdate:urlDict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-			if (error) {
-				NSLog(@"Error sending URL: %@", error.localizedDescription);
-			}
-		}];
-		
-//		// close the session so other apps can use Pebble too
-//		[watch closeSession:^(void) {
-//#if DEBUG
-//			NSLog(@"Session closed.");
-//#endif
-//		}];
-	}];
-}
 
 - (void)sendStringsToPebble:(NSArray *)words
 				 completion:(void(^)(BOOL success))handler
 {
+	// safety check
+	if (!words || words.count == 0) {
+		if (handler) {
+			handler(YES);
+		}
+		return;
+	}
+	
 	__block BOOL success = YES;
 	
 	if (!self.connectedWatch) {
@@ -230,43 +229,56 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 				if (error) {
 					NSLog(@"Error launching watch app: %@", error);
 					success = NO;
-				}
-			}];
-			
-			// quick error check
-			if (!success)
-				return;
-			
-			// send the strings to the watch
-			/// how many errors we've encountered in the course of sending messages so far
-			__block NSUInteger errorCount = 0;
-			for (__block NSUInteger i = 0; i < words.count; i++) {
-				// check if we're receiving all errors
-				if (errorCount >= 10 && 1.0 * errorCount / i >= 0.50) {
-					NSLog(@"Too many errors! Aborting send.");
-					success = NO;
-					break;
+					return;
 				}
 				
-				NSString* word = words[i];
-				NSDictionary* dict = @{ [NSNumber numberWithUnsignedInteger:i]: word };
-				
-				[self.connectedWatch appMessagesPushUpdate:dict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+				// send the strings to the watch
+				// how many errors we've encountered in the course of sending messages so far
+				__block NSUInteger errorCount = 0;
+				__block NSUInteger wordNum = 0;
+				__block NSDictionary *dict = @{ @(wordNum): words[wordNum] };
+				// the code to execute after each word is delivered
+				void (^sendNextWord)(PBWatch *watch, NSDictionary *update, NSError *error);
+				__block __weak void (^weakBlock)(PBWatch *watch, NSDictionary *update, NSError *error);
+				weakBlock = sendNextWord = ^void(PBWatch *watch, NSDictionary *update, NSError *error) {
+					if (wordNum >= words.count || wordNum == NSUIntegerMax) {
+						return;
+					}
+					
+					// check if we're receiving nothing but errors
+					if (errorCount >= 10 && 1.0 * errorCount / wordNum >= 0.50) {
+						NSLog(@"Too many errors! Aborting send.");
+						success = NO;
+						return;
+					}
+					
 					if (error) {
 						NSLog(@"Error while sending word: %@", error);
 						errorCount++;
-						i--; // retry this message again
+						wordNum--; // retry sending this message
 					}
-				}];
+					
+					// send the next word
+					NSString *word = [words objectAtIndex:wordNum];
+					if (!word) {
+						NSLog(@"Encountered nil word while sending words.");
+						success = NO;
+						return;
+					}
+					dict = @{ @(wordNum++): word };
+					
+					[self.connectedWatch appMessagesPushUpdate:dict onSent:weakBlock];
+				};
 				
-				// quick error check
-				if (!success)
-					return;
-			}
+				// actually run the block
+				[self.connectedWatch appMessagesPushUpdate:dict onSent:sendNextWord];
+			}];
 		}];
 	}
 	
-	handler(success);
+	if (handler) {
+		handler(success);
+	}
 }
 
 - (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update {
@@ -294,5 +306,29 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	}
 	[self.delegate watch:watch didChangeConnectionStateToConnected:NO];
 }
+
+
+#pragma mark - Misc. setup
+
+- (void)setUpPebble {
+	[[PBPebbleCentral defaultCentral] setDelegate:self];
+	
+	// Set the UUID of the app
+	uuid_t stelaUUIDBytes;
+	NSUUID *stelaUUID = [[NSUUID alloc] initWithUUIDString:[NSString stringWithString:stelaUUIDString]];
+	[stelaUUID getUUIDBytes:stelaUUIDBytes];
+	[[PBPebbleCentral defaultCentral] setAppUUID:[NSData dataWithBytes:stelaUUIDBytes length:sizeof(uuid_t)]];
+	
+	self.connectedWatch = [[PBPebbleCentral defaultCentral] lastConnectedWatch];
+#if DEBUG
+	NSLog(@"Last connected watch: %@", self.connectedWatch);
+#endif
+	
+	[self.connectedWatch appMessagesAddReceiveUpdateHandler:^BOOL(PBWatch *watch, NSDictionary *update) {
+		[self handleUpdateFromWatch:watch withUpdate:update];
+		return YES;
+	}];
+}
+
 
 @end
