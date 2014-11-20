@@ -40,7 +40,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 	uuid_t stelaUUIDBytes;
 	NSUUID *stelaUUID = [[NSUUID alloc] initWithUUIDString:[NSString stringWithString:stelaUUIDString]];
 	[stelaUUID getUUIDBytes:stelaUUIDBytes];
-	[[PBPebbleCentral defaultCentral] setAppUUID:[NSData dataWithBytes:stelaUUIDBytes length:16]];
+	[[PBPebbleCentral defaultCentral] setAppUUID:[NSData dataWithBytes:stelaUUIDBytes length:sizeof(uuid_t)]];
 	
     self.connectedWatch = [[PBPebbleCentral defaultCentral] lastConnectedWatch];
 	NSLog(@"Last connected watch: %@", self.connectedWatch);
@@ -60,6 +60,12 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 		NSLog(@"Session closed.");
 #endif
 	}];
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+	// save the current page to reload on next launch
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[defaults setObject:self.currentURL forKey:@"savedURL"];
 }
 
 #pragma mark String Stuff
@@ -109,8 +115,7 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 		} else {
 			NSLog(@"Error launching app - error: %@", error);
 		}
-	}
-	 ];
+	}];
 }
 
 - (void)killPebbleApp {
@@ -202,6 +207,66 @@ const static int sPebbleStorageCapacity = 50000;	// 50KB
 //#endif
 //		}];
 	}];
+}
+
+- (void)sendStringsToPebble:(NSArray *)words
+				 completion:(void(^)(BOOL success))handler
+{
+	__block BOOL success = YES;
+	
+	if (!self.connectedWatch) {
+		NSLog(@"%s: No connected watch.", __PRETTY_FUNCTION__);
+		success = NO;
+	} else {
+		[self.connectedWatch appMessagesGetIsSupported:^(PBWatch* watch, BOOL isAppMessagesSupported) {
+			if (!isAppMessagesSupported) {
+				NSLog(@"App messages not supported!");
+				success = NO;
+				return;
+			}
+			
+			// launch the watch app
+			[watch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
+				if (error) {
+					NSLog(@"Error launching watch app: %@", error);
+					success = NO;
+				}
+			}];
+			
+			// quick error check
+			if (!success)
+				return;
+			
+			// send the strings to the watch
+			/// how many errors we've encountered in the course of sending messages so far
+			__block NSUInteger errorCount = 0;
+			for (__block NSUInteger i = 0; i < words.count; i++) {
+				// check if we're receiving all errors
+				if (errorCount >= 10 && 1.0 * errorCount / i >= 0.50) {
+					NSLog(@"Too many errors! Aborting send.");
+					success = NO;
+					break;
+				}
+				
+				NSString* word = words[i];
+				NSDictionary* dict = @{ [NSNumber numberWithUnsignedInteger:i]: word };
+				
+				[self.connectedWatch appMessagesPushUpdate:dict onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+					if (error) {
+						NSLog(@"Error while sending word: %@", error);
+						errorCount++;
+						i--; // retry this message again
+					}
+				}];
+				
+				// quick error check
+				if (!success)
+					return;
+			}
+		}];
+	}
+	
+	handler(success);
 }
 
 - (void)handleUpdateFromWatch:(PBWatch *)watch withUpdate:(NSDictionary *)update {

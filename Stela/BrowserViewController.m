@@ -11,6 +11,7 @@
 @import WebKit;
 #import "TargetConditionals.h"
 #import <MBProgressHUD/MBProgressHUD.h>
+#import <AFNetworking.h>
 
 //static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
@@ -20,7 +21,7 @@ static const CGFloat kLabelFontSize = 12.0f;
 static const CGFloat kAddressHeight = 24.0f;
 
 
-@interface BrowserViewController () <UIGestureRecognizerDelegate, PebbleConnectionNoticeDelegate>
+@interface BrowserViewController () <UIGestureRecognizerDelegate, WKNavigationDelegate, PebbleConnectionNoticeDelegate>
 
 @property (nonatomic) WKWebView *webView;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *back;
@@ -40,8 +41,8 @@ static const CGFloat kAddressHeight = 24.0f;
 - (void)loadRequestFromString:(NSString *)urlString;
 - (void)updateButtons;
 - (void)loadRequestFromAddressField:(id)addressField;
-- (void)updateAddress:(NSURLRequest *)request;
-- (void)updateTitle:(UIWebView *)aWebView;
+- (void)updateAddress:(NSString*)newAddress;
+- (void)updateTitle:(NSString*)newTitle;
 
 @end
 
@@ -50,6 +51,8 @@ static const CGFloat kAddressHeight = 24.0f;
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+	
+	self.webView.navigationDelegate = self;
 	
 	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
 	NSError *__autoreleasing *error = NULL;
@@ -112,10 +115,22 @@ static const CGFloat kAddressHeight = 24.0f;
 	[navBar addSubview:label];
 	self.pageTitle = label;
 	
+	/* load the saved URL, if any */
+	NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+	NSString* savedURL = [defaults stringForKey:@"savedURL"];
+	if (!savedURL || [savedURL isEqualToString:@""]) {
+		savedURL = @"https://en.wikipedia.org/wiki/Pebble_watch";
+#if DEBUG
+		NSLog(@"Used default URL.");
+	} else {
+		NSLog(@"Used saved URL (%@).", savedURL);
+#endif
+	}
+	
 	/* Create the address bar */
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer * 2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
-	address.text = @"https://en.wikipedia.org/wiki/Pebble_watch";
+	address.text = savedURL;
 	[address setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 	[address setAutocorrectionType:UITextAutocorrectionTypeNo];
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -137,33 +152,6 @@ static const CGFloat kAddressHeight = 24.0f;
 	
 	// Start up by loading the Pebble Wikipedia page
     [self loadRequestFromString:self.addressField.text];
-}
-
-/**	Return the result of running Dave's JavaScript, which supposedly pulls the currently loaded article from the page.
- */
-- (NSString *)getParsedText {
-	NSString *jsCall = [NSString stringWithFormat:@"getText(%@)", self.addressField.text];
-	NSString __block *parsedText = nil;
-	[self.webView evaluateJavaScript:jsCall
-				   completionHandler:^(id result, NSError *error) {
-					   if (error) {
-						   NSLog(@"Error evaluating JavaScript: %@", error);
-					   } else {
-						   parsedText = result;
-					   }
-				   }];
-#if DEBUG
-	NSLog(@"BrowserViewController getParsedText (line %d): Text returned by call to the JS parser: %@", __LINE__, parsedText);
-#endif
-	return parsedText;
-}
-
-- (void)displayLoadingSpinner {
-//	UIActivityIndicatorView
-}
-
-- (void)hideLoadingSpinner {
-	
 }
 
 #pragma mark Browser Stuff
@@ -199,10 +187,10 @@ static const CGFloat kAddressHeight = 24.0f;
 	[self.webView loadRequest:urlRequest];
 }
 
-- (void)updateAddress:(NSURLRequest *)request {
-	NSURL *url = [request mainDocumentURL];
-	NSString *absoluteString = [url absoluteString];
-	self.addressField.text = absoluteString;
+- (void)updateAddress:(NSString*)newAddress {
+	self.addressField.text = newAddress;
+	AppDelegate* appDelegate = [UIApplication sharedApplication].delegate;
+	appDelegate.currentURL = newAddress;
 }
 
 - (void)updateButtons {
@@ -212,72 +200,103 @@ static const CGFloat kAddressHeight = 24.0f;
 #if TARGET_IPHONE_SIMULATOR
 	self.sendToPebble.enabled = YES;
 #else // TARGET_IPHONE_SIMULATOR
-	self.sendToPebble.enabled = [((AppDelegate *)[[UIApplication sharedApplication] delegate]).connectedWatch isConnected];
+	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+	self.sendToPebble.enabled = [appDelegate.connectedWatch isConnected];
 #endif // TARGET_IPHONE_SIMULATOR
 }
 
-- (void)updateTitle:(UIWebView *)aWebView {
-	NSString *pageTitle = [aWebView stringByEvaluatingJavaScriptFromString:@"document.title"];
-	self.pageTitle.text = pageTitle;
+- (void)updateTitle:(NSString*)newTitle {
+	self.pageTitle.text = newTitle;
 }
 
 #pragma mark Watch Stuff
 
 - (IBAction)sendToPebble:(id)sender {
-	//TODO: fix all this, see what works.
-	
 	// Start a spinner so the user knows something's happening
 	self.progressHUD = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
 	self.progressHUD.labelText = @"Sending...";
 	self.progressHUD.minShowTime = 3;
 	self.progressHUD.dimBackground = YES;
 	
-	// create a new WebView to run our JS
-	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
-	UIWebView *aWebView = [[UIWebView alloc] init];
-	aWebView.hidden = YES;
-	[aWebView loadHTMLString:@"<script src=\"ArticlePull.js\"></script>" baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] resourcePath]]];
-//	NSString *function = [[NSString alloc] initWithFormat: @"getText(%@)", self.addressField.text];
-//	NSString *result = [awebView stringByEvaluatingJavaScriptFromString:function];
-//	[appDelegate pushString:result toWatch:appDelegate.connectedWatch];
-//	UIColor *original = self.sendToPebble.tintColor;
-//	self.sendToPebble.tintColor = [UIColor greenColor];
-//	sleep(2);
-//	self.sendToPebble.tintColor = original;
-//	return;
-	
-	[appDelegate sendURL:self.addressField.text toWatch:appDelegate.connectedWatch];	// send the URL to the Pebble
-	
-	// hide the HUD
-	[self.progressHUD hide:YES];
+	// turn the webpage into an array of words
+	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+	NSDictionary *requestParameters = @{@"url": self.addressField.text,
+										@"apikey": @"f6687a0711a74306ac45cb89c08b026fe0cd03d6",
+										@"outputMode": @"json"
+										};
+	[manager GET:@"http://access.alchemyapi.com/calls/url/URLGetText" parameters:requestParameters
+		 success:^(AFHTTPRequestOperation *operation, id responseObject) {
+			 
+			 // turn the responseObject into useful text
+			 if (![responseObject isKindOfClass:[NSDictionary class]]) {
+				 NSLog(@"Error: responseObject is not a dictionary.");
+				 // hide the HUD
+				 [self.progressHUD hide:YES];
+				 return;
+			 }
+			 NSDictionary *responseDict = responseObject;
+			 NSString *blockText = [responseDict objectForKey:@"text"];
+			 if (!blockText) {
+				 NSLog(@"Error: couldn't get text from JSON response.");
+				 // hide the HUD
+				 [self.progressHUD hide:YES];
+				 return;
+			 }
+			 NSArray *words = [blockText componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			 // send the words to the Pebble
+			 AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+			 [appDelegate sendStringsToPebble:words completion:^(BOOL success) {
+				 if (success) {
+					 NSLog(@"Successfully send words to Pebble.");
+					 // hide the HUD
+					 [self.progressHUD hide:YES];
+				 } else {
+					 NSLog(@"ERROR. Failed to send words to Pebble.");
+					 
+					 [[[UIAlertView alloc] initWithTitle:@"Error"
+												 message:@"Unable to send words to Pebble."
+												delegate:nil
+									   cancelButtonTitle:@"Ok"
+									   otherButtonTitles:nil] show];
+					 
+					 // hide the HUD
+					 [self.progressHUD hide:YES];
+				 }
+			 }];
+		 }
+		 failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+			 NSLog(@"Failed to get text from current website: %@", error);
+			 // hide the HUD
+			 [self.progressHUD hide:YES];
+		 }];
 }
 
 - (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
 	self.sendToPebble.enabled = isConnected;
 }
 
+#pragma mark WKNavigationDelegate
 
-#pragma mark UIWebViewDelegate methods
-
-- (void)webViewDidStartLoad:(UIWebView *)webView {
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 	[self updateButtons];
 }
 
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	[self updateButtons];
-	[self updateTitle:webView];
-	[self updateAddress:[webView request]];
+	[self updateTitle:webView.title];
+	[self updateAddress:webView.URL.absoluteString];
 }
 
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+- (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	[self updateButtons];
-	[[[UIAlertView alloc] initWithTitle:@"Error" message:error.localizedDescription delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
-#if DEBUG
-	NSLog(@"%@", error.localizedDescription);
-#endif
+}
+
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+	[self updateButtons];
 }
 
 @end
