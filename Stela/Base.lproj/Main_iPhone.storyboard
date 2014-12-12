@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14B25" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="OTF-Pz-UFk">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14C68m" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="OTF-Pz-UFk">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
     </dependencies>
     <scenes>
         <!--Browser View Controller-->
@@ -18,7 +18,11 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
                     <toolbarItems>
-                        <barButtonItem systemItem="rewind" id="fQL-og-pOG"/>
+                        <barButtonItem systemItem="rewind" id="fQL-og-pOG">
+                            <connections>
+                                <action selector="browseBack:" destination="vXZ-lx-hvc" id="f2U-sy-f93"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="F1E-No-bJE"/>
                         <barButtonItem systemItem="stop" id="hEZ-nu-SSL"/>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="kf4-Tg-9Ii"/>
@@ -30,7 +34,11 @@
                             </connections>
                         </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="wz8-PE-3nf"/>
-                        <barButtonItem systemItem="fastForward" id="Pxn-Wt-Pof"/>
+                        <barButtonItem systemItem="fastForward" id="Pxn-Wt-Pof">
+                            <connections>
+                                <action selector="browseForward:" destination="vXZ-lx-hvc" id="ARU-yK-QyS"/>
+                            </connections>
+                        </barButtonItem>
                     </toolbarItems>
                     <navigationItem key="navigationItem" id="sZp-S7-tMI"/>
                     <connections>

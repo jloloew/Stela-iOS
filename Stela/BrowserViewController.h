@@ -11,8 +11,6 @@
 
 @interface BrowserViewController : UIViewController <PebbleConnectionNoticeDelegate>
 
-- (void)displayLoadingSpinner;
-- (void)hideLoadingSpinner;
 - (IBAction)sendToPebble:(id)sender;
 
 @end

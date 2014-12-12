@@ -35,14 +35,13 @@ static const CGFloat kAddressHeight = 24.0f;
 
 @property (strong, nonatomic) MBProgressHUD *progressHUD;
 
-- (NSString *)getParsedText;	// Injects JavaScript
 - (void)browseForward:(UIScreenEdgePanGestureRecognizer *)recognizer;
 - (void)browseBack:(UIScreenEdgePanGestureRecognizer *)recognizer;
 - (void)loadRequestFromString:(NSString *)urlString;
 - (void)updateButtons;
 - (void)loadRequestFromAddressField:(id)addressField;
-- (void)updateAddress:(NSString*)newAddress;
-- (void)updateTitle:(NSString*)newTitle;
+- (void)updateAddress:(NSString *)newAddress;
+- (void)updateTitle:(NSString *)newTitle;
 
 @end
 
@@ -52,57 +51,30 @@ static const CGFloat kAddressHeight = 24.0f;
 {
     [super viewDidLoad];
 	
+	self.webView = [[WKWebView alloc] initWithFrame:self.view.bounds];
 	self.webView.navigationDelegate = self;
-	
-	NSString *jsPath = [[NSBundle mainBundle] pathForResource:@"ArticlePull" ofType:@"js"];
-	NSError *__autoreleasing *error = NULL;
-	NSString *js = [NSString stringWithContentsOfFile:jsPath encoding:NSUTF8StringEncoding error:error];
-	if (error) {
-		NSLog(@"Error loading JavaScript from file to parse article.");
-		[[[UIAlertView alloc] initWithTitle:@"Error"
-									message:@"Error loading JavaScript from file to parse article."
-								   delegate:self
-						  cancelButtonTitle:@"OK"
-						  otherButtonTitles:nil] show];
-	}
-#if DEBUG
-	NSLog(@"Loaded js successfully");
-#endif
-	
-	WKUserScript *script = [[WKUserScript alloc] initWithSource:js
-												  injectionTime:WKUserScriptInjectionTimeAtDocumentEnd
-											   forMainFrameOnly:YES];
-	WKUserContentController *contentController = [[WKUserContentController alloc] init];
-	[contentController addUserScript:script];
-	WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
-	config.userContentController = contentController;
-	self.webView = [[WKWebView alloc] initWithFrame:self.view.bounds
-									  configuration:config];
 	self.webView.allowsBackForwardNavigationGestures = YES;
 	
-	self.view = self.webView;
+	// update the title and URL automatically
+	[self.webView addObserver:self
+				   forKeyPath:NSStringFromSelector(@selector(title))
+					  options:0
+					  context:nil];
+	[self.webView addObserver:self
+				   forKeyPath:NSStringFromSelector(@selector(URL))
+					  options:0
+					  context:nil];
+	[self.webView addObserver:self
+				   forKeyPath:@"loading"
+					  options:0
+					  context:nil];
+	
+	[self.view addSubview:self.webView];
 	NSString *sysver = [UIDevice currentDevice].systemVersion;
-	NSInteger systemVersion = [[sysver componentsSeparatedByString:@"."][0] integerValue];
+	NSInteger systemVersion = [[[sysver componentsSeparatedByString:@"."] firstObject] integerValue];
 	if (systemVersion >= 7) {
 		self.webView.scrollView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
 	}
-	
-	/* Enable swipe to go forward/back */
-	UIScreenEdgePanGestureRecognizer *bezelForwardSwipeGestureRecognizer = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(browseForward:)];
-	UIScreenEdgePanGestureRecognizer *bezelBackSwipeGestureRecognizer = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(browseBack:)];
-	bezelForwardSwipeGestureRecognizer.edges = UIRectEdgeRight;
-	bezelBackSwipeGestureRecognizer.edges = UIRectEdgeLeft;
-	bezelForwardSwipeGestureRecognizer.delegate = self;
-	bezelBackSwipeGestureRecognizer.delegate = self;
-	[self.view addGestureRecognizer:bezelForwardSwipeGestureRecognizer];
-	[self.view addGestureRecognizer:bezelBackSwipeGestureRecognizer];
-	// hack to avoid scrolling the web view instead of doing the back/forward action
-	UIView *invisibleForwardScrollPreventer = [UIView new];
-	UIView *invisibleBackScrollPreventer = [UIView new];
-	invisibleForwardScrollPreventer.frame = CGRectMake(0, 0, 10, self.view.frame.size.height);
-	invisibleBackScrollPreventer.frame = CGRectMake(self.view.frame.size.width - 10, 0, 10, self.view.frame.size.height);
-	[self.view addSubview:invisibleForwardScrollPreventer];
-	[self.view addSubview:invisibleBackScrollPreventer];
 	
 	/* Create the page title label */
 	UINavigationBar *navBar = self.navigationController.navigationBar;
@@ -116,8 +88,8 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.pageTitle = label;
 	
 	/* load the saved URL, if any */
-	NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-	NSString* savedURL = [defaults stringForKey:@"savedURL"];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	NSString *savedURL = [defaults stringForKey:@"savedURL"];
 	if (!savedURL || [savedURL isEqualToString:@""]) {
 		savedURL = @"https://en.wikipedia.org/wiki/Pebble_watch";
 #if DEBUG
@@ -154,21 +126,23 @@ static const CGFloat kAddressHeight = 24.0f;
     [self loadRequestFromString:self.addressField.text];
 }
 
+- (void)dealloc {
+	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(title))];
+	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(URL))];
+	[self.webView removeObserver:self forKeyPath:@"loading"];
+}
+
 #pragma mark Browser Stuff
 
-- (void)browseForward:(UIScreenEdgePanGestureRecognizer *)recognizer {
-	if (recognizer.state == UIGestureRecognizerStateEnded) {
-		if (self.webView.canGoForward) {
-			[self.webView goForward];
-		}
+- (IBAction)browseForward:(id)sender {
+	if (self.webView.canGoForward) {
+		[self.webView goForward];
 	}
 }
 
-- (void)browseBack:(UIScreenEdgePanGestureRecognizer *)recognizer {
-	if (recognizer.state == UIGestureRecognizerStateEnded) {
-		if (self.webView.canGoBack) {
-			[self.webView goBack];
-		}
+- (IBAction)browseBack:(id)sender {
+	if (self.webView.canGoBack) {
+		[self.webView goBack];
 	}
 }
 
@@ -187,9 +161,9 @@ static const CGFloat kAddressHeight = 24.0f;
 	[self.webView loadRequest:urlRequest];
 }
 
-- (void)updateAddress:(NSString*)newAddress {
+- (void)updateAddress:(NSString *)newAddress {
 	self.addressField.text = newAddress;
-	AppDelegate* appDelegate = [UIApplication sharedApplication].delegate;
+	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 	appDelegate.currentURL = newAddress;
 }
 
@@ -205,7 +179,7 @@ static const CGFloat kAddressHeight = 24.0f;
 #endif // TARGET_IPHONE_SIMULATOR
 }
 
-- (void)updateTitle:(NSString*)newTitle {
+- (void)updateTitle:(NSString *)newTitle {
 	self.pageTitle.text = newTitle;
 }
 
@@ -247,7 +221,7 @@ static const CGFloat kAddressHeight = 24.0f;
 			 AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 			 [appDelegate sendStringsToPebble:words completion:^(BOOL success) {
 				 if (success) {
-					 NSLog(@"Successfully send words to Pebble.");
+					 NSLog(@"Successfully sent words to Pebble.");
 					 // hide the HUD
 					 [self.progressHUD hide:YES];
 				 } else {
@@ -277,6 +251,10 @@ static const CGFloat kAddressHeight = 24.0f;
 
 #pragma mark WKNavigationDelegate
 
+- (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation {
+	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+}
+
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 	[self updateButtons];
@@ -284,25 +262,50 @@ static const CGFloat kAddressHeight = 24.0f;
 	// save the new URL
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 	appDelegate.currentURL = [webView.URL absoluteString];
-	//TODO: Use KVO to update the address bar
 	self.addressField.text = appDelegate.currentURL;
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	[self updateButtons];
-	[self updateTitle:webView.title];
-	[self updateAddress:webView.URL.absoluteString];
 }
 
-- (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+- (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation
+	  withError:(NSError *)error
+{
+	#if DEBUG
+		NSLog(@"%s Error: %@", __PRETTY_FUNCTION__, error);
+	#endif
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	[self updateButtons];
 }
 
-- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation
+	  withError:(NSError *)error
+{
+	#if DEBUG
+		NSLog(@"%s Error: %@", __PRETTY_FUNCTION__, error);
+	#endif
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 	[self updateButtons];
+}
+
+#pragma mark KVO
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+					  ofObject:(id)object
+						change:(NSDictionary *)change
+					   context:(void *)context
+{
+	if (object == self.webView) {
+		if ([keyPath isEqualToString:NSStringFromSelector(@selector(title))]) {
+			[self updateTitle:self.webView.title];
+		} else if ([keyPath isEqualToString:NSStringFromSelector(@selector(URL))]) {
+			[self updateAddress:[self.webView.URL absoluteString]];
+		} else if ([keyPath isEqualToString:@"loading"]) {
+			[self updateButtons];
+		}
+	}
 }
 
 @end
