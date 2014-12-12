@@ -10,7 +10,7 @@
 
 const static int sMaxTextChunkLength = 60;
 const static int sMaxWordLength = 8;
-const static int sPebbleStorageCapacity = 50000;	// 50KB
+//const static int sPebbleStorageCapacity = 50000;	// 50KB
 
 static NSString * SAVED_URL_KEY = @"savedURL";
 
@@ -41,8 +41,6 @@ static NSString * SAVED_URL_KEY = @"savedURL";
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	[defaults setObject:currentURL forKey:SAVED_URL_KEY];
-	
-	//TODO: load the URL
 }
 
 
@@ -124,7 +122,6 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 	}
 	
 	self.currentURL = urlString;
-	//TODO: start to load the URL
 	
 	return YES;
 }
