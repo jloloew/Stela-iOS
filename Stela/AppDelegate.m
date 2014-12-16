@@ -252,7 +252,8 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 					if (error) {
 						NSLog(@"Error while sending word: %@", error);
 						errorCount++;
-						wordNum--; // retry sending this message
+						if (wordNum > 0)
+							wordNum--; // retry sending this message
 					}
 					
 					// send the next word

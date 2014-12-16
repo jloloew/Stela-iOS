@@ -1,11 +1,11 @@
 PODS:
   - AFNetworking (2.5.0):
-    - AFNetworking/NSURLConnection
-    - AFNetworking/NSURLSession
-    - AFNetworking/Reachability
-    - AFNetworking/Security
-    - AFNetworking/Serialization
-    - AFNetworking/UIKit
+    - AFNetworking/NSURLConnection (= 2.5.0)
+    - AFNetworking/NSURLSession (= 2.5.0)
+    - AFNetworking/Reachability (= 2.5.0)
+    - AFNetworking/Security (= 2.5.0)
+    - AFNetworking/Serialization (= 2.5.0)
+    - AFNetworking/UIKit (= 2.5.0)
   - AFNetworking/NSURLConnection (2.5.0):
     - AFNetworking/Reachability
     - AFNetworking/Security
@@ -33,4 +33,4 @@ SPEC CHECKSUMS:
   MBProgressHUD: 2038dbcf3dce73215abed6001657043d53aa79a8
   PebbleKit: fff19519d19fa6e1be853f85ec70939282332655
 
-COCOAPODS: 0.34.4
+COCOAPODS: 0.35.0
