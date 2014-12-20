@@ -24,9 +24,17 @@
                             </connections>
                         </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="F1E-No-bJE"/>
-                        <barButtonItem systemItem="stop" id="hEZ-nu-SSL"/>
+                        <barButtonItem systemItem="stop" id="hEZ-nu-SSL">
+                            <connections>
+                                <action selector="stopLoading:" destination="vXZ-lx-hvc" id="er0-kO-r9u"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="kf4-Tg-9Ii"/>
-                        <barButtonItem systemItem="refresh" id="kA6-ou-E2s"/>
+                        <barButtonItem systemItem="refresh" id="kA6-ou-E2s">
+                            <connections>
+                                <action selector="refresh:" destination="vXZ-lx-hvc" id="fYZ-mE-0mv"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="ne4-l5-xwz"/>
                         <barButtonItem title="Stela" id="ABn-b8-fuF">
                             <connections>

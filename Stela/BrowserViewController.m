@@ -146,6 +146,14 @@ static const CGFloat kAddressHeight = 24.0f;
 	}
 }
 
+- (IBAction)refresh:(id)sender {
+	[self.webView reloadFromOrigin];
+}
+
+- (IBAction)stopLoading:(id)sender {
+	[self.webView stopLoading];
+}
+
 - (void)loadRequestFromAddressField:(id)addressField {
 	NSString *urlString = [addressField text];
 	[self loadRequestFromString:urlString];
