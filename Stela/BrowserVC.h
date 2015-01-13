@@ -6,8 +6,9 @@
 //  Copyright (c) 2014 Justin Loew. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+@import UIKit;
 #import "AppDelegate.h"
+
 
 @interface BrowserViewController : UIViewController <PebbleConnectionNoticeDelegate>
 

@@ -6,12 +6,13 @@
 //  Copyright (c) 2014 Justin Loew. All rights reserved.
 //
 
-#import "BrowserViewController.h"
 @import UIKit;
 @import WebKit;
 #import "TargetConditionals.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import <AFNetworking.h>
+#import "Constants.h"
+#import "BrowserVC.h"
 
 //static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
@@ -196,14 +197,14 @@ static const CGFloat kAddressHeight = 24.0f;
 - (IBAction)sendToPebble:(id)sender {
 	// Start a spinner so the user knows something's happening
 	self.progressHUD = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-	self.progressHUD.labelText = @"Sending...";
-	self.progressHUD.minShowTime = 3;
+	self.progressHUD.labelText = NSLocalizedString(@"Sending...", nil);
+	self.progressHUD.minShowTime = 3; // keep the spinner onscreen for at least 3 seconds
 	self.progressHUD.dimBackground = YES;
 	
 	// turn the webpage into an array of words
 	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
 	NSDictionary *requestParameters = @{@"url": self.addressField.text,
-										@"apikey": @"f6687a0711a74306ac45cb89c08b026fe0cd03d6",
+										@"apikey": API_KEY,
 										@"outputMode": @"json"
 										};
 	[manager GET:@"http://access.alchemyapi.com/calls/url/URLGetText" parameters:requestParameters
@@ -217,7 +218,7 @@ static const CGFloat kAddressHeight = 24.0f;
 				 return;
 			 }
 			 NSDictionary *responseDict = responseObject;
-			 NSString *blockText = [responseDict objectForKey:@"text"];
+			 NSString *blockText = responseDict[@"text"];
 			 if (!blockText) {
 				 NSLog(@"Error: couldn't get text from JSON response.");
 				 // hide the HUD
@@ -250,6 +251,12 @@ static const CGFloat kAddressHeight = 24.0f;
 			 NSLog(@"Failed to get text from current website: %@", error);
 			 // hide the HUD
 			 [self.progressHUD hide:YES];
+			 
+			 // Tell the user that retrieval failed
+			 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
+																					  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
+																			   preferredStyle:UIAlertControllerStyleAlert];
+			 [self presentViewController:alertController animated:YES completion:nil];
 		 }];
 }
 

@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Justin Loew. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+@import UIKit;
 #import <PebbleKit/PebbleKit.h>
 
 #define URL_STRING_DICTIONARY_KEY 1
@@ -31,10 +31,10 @@ static NSString * const stelaUUIDString = @"6db75b90-8dad-4490-94ca-0fef4296c78e
 @property (strong, nonatomic) UIWindow *window;
 @property (strong, nonatomic) PBWatch *connectedWatch;
 @property (weak, nonatomic) id<PebbleConnectionNoticeDelegate> delegate;
-@property (nonatomic) NSString* currentURL;
+@property (nonatomic) NSString *currentURL;
 
 - (void)launchPebbleApp;
 - (void)killPebbleApp;
-- (void)sendStringsToPebble:(NSArray*)words completion:(void(^)(BOOL success))handler;
+- (void)sendStringsToPebble:(NSArray *)words completion:(void(^)(BOOL success))handler;
 
 @end
