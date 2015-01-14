@@ -22,7 +22,7 @@ static NSString * SAVED_URL_KEY = @"savedURL";
 @property (nonatomic) NSMutableArray *textBlocks;
 @property (nonatomic) NSInteger lastSentTextBlockIndex;
 /// Maximum number of words in each of the text blocks
-@property (nonatomic) NSUInteger blockSize;
+@property (nonatomic) NSUInteger blockSize; // 300 by default
 
 - (BOOL)isValidStelaURL:(NSURL *)url;
 
@@ -62,7 +62,7 @@ static NSString * SAVED_URL_KEY = @"savedURL";
 	[self setUpPebble];
 	
 	// default block size
-	self.blockSize = 500; // in words
+	self.blockSize = 300; // in words
 	self.lastSentTextBlockIndex = -1;
 	
     return YES;
@@ -210,7 +210,7 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 }
 
 - (void)sendStringsToPebble:(NSArray *)words
-				 completion:(void (^)(BOOL))handler
+				 completion:(void (^)(BOOL success))handler
 {
 	// safety check
 	if (!words || words.count == 0) {
@@ -233,14 +233,17 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 			NSLog(@"Successfully sent first block to the watch.");
 		}
 		#endif
+		
+		// call our caller's handler
+		handler(success);
 	}];
 }
 
 - (void)sendTextBlockAtIndex:(NSUInteger)blockIndex
-				  completion:(void(^)(BOOL success))handler
+				  completion:(void (^)(BOOL success))handler
 {
 	NSAssert(blockIndex < self.textBlocks.count, @"block index out of range");
-	__block NSUInteger _blockBlockIndex = blockIndex;
+	__block NSUInteger _blockBlockIndex = blockIndex; // block-safe index of the block to send
 	
 	__block NSArray *textBlock = self.textBlocks[blockIndex];
 	
@@ -250,6 +253,11 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 	if (!self.connectedWatch) {
 		NSLog(@"%s: No connected watch.", __PRETTY_FUNCTION__);
 		success = NO;
+	} else if (!textBlock) {
+		#if DEBUG
+			NSLog(@"No block to send. Reporting success.");
+		#endif
+		success = YES;
 	} else {
 		// a watch is connected
 		[self.connectedWatch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
@@ -267,24 +275,11 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 					return;
 				}
 				
-//				// tell the watch that we're about to send a block
-//				[watch appMessagesPushUpdate:@{@(PEB_TEXT_BLOCK_NUMBER_KEY): @(blockIndex)} onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-//					if (error) {
-//						NSLog(@"Error sending new block index to watch: %@", error);
-//					}
-//					#if DEBUG
-//					else {
-//						NSLog(@"Sent new block index (%lu) to watch.", (unsigned long)blockIndex);
-//					}
-//					#endif
-//				}];
-				
-				
 				// send the strings to the watch
 				// how many errors we've encountered in the course of sending messages so far
 				__block NSUInteger errorCount = 0;
 				__block NSUInteger wordNum = 1;
-				__block NSDictionary *dict = @{ @(0): textBlock[0] };
+				__block NSDictionary *dict = @{ @(blockIndex): textBlock[0] };
 				// the code to execute after each word is delivered
 				void (^sendNextWord)(PBWatch *watch, NSDictionary *update, NSError *error);
 				__block __weak void (^weakBlock)(PBWatch *watch, NSDictionary *update, NSError *error);
@@ -342,35 +337,37 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 	#endif
 	
 	// process requests for additional blocks
-	if (update[@(PEB_TEXT_BLOCK_NUMBER_KEY)]) {
-		if (![update[@(PEB_TEXT_BLOCK_NUMBER_KEY)] isKindOfClass:[NSNumber class]]) {
-			NSLog(@"Error: received request for block from watch, but requested block is not a number");
-			return;
-		}
-		NSUInteger blockIndex = [update[@(PEB_TEXT_BLOCK_NUMBER_KEY)] unsignedIntegerValue];
+	if (update[@((unsigned)PEB_TEXT_BLOCK_NUMBER_KEY)]) {
+		// turns out, the update contains NSData.
+//		if (![update[@(PEB_TEXT_BLOCK_NUMBER_KEY)] isKindOfClass:[NSNumber class]]) {
+//			NSLog(@"Error: received request for block from watch, but requested block is not a number.");
+//			return;
+//		}
+		NSUInteger blockIndex = *(uint32_t *)[update[@((unsigned)PEB_TEXT_BLOCK_NUMBER_KEY)] bytes];
 		[self sendTextBlockAtIndex:blockIndex completion:^(BOOL success) {
 			#if DEBUG
-				NSLog(@"Successfully send a new block (block number %lu).", (unsigned long)blockIndex);
+				NSLog(@"Successfully sent a new block (block number %lu).", (unsigned long)blockIndex);
 			#endif
 		}];
 	}
 	
 	// process requests to get and set the text block size
-	if (update[@(PEB_TEXT_BLOCK_SIZE_KEY)]) {
-		if (![update[@(PEB_TEXT_BLOCK_SIZE_KEY)] isKindOfClass:[NSNumber class]]) {
+	if (update[@((unsigned)PEB_TEXT_BLOCK_SIZE_KEY)]) {
+		if (![update[@((unsigned)PEB_TEXT_BLOCK_SIZE_KEY)] isKindOfClass:[NSNumber class]]) {
 			NSLog(@"Error: received request for block size from watch, but requested block size is not a number");
 			return;
 		}
-		NSInteger blockSize = [update[@(PEB_TEXT_BLOCK_SIZE_KEY)] integerValue];
+		NSInteger blockSize = [update[@((unsigned)PEB_TEXT_BLOCK_SIZE_KEY)] integerValue];
 		// if the new number is a valid value, set the max block size.
-		if (blockSize > 0 && blockSize != self.blockSize) {
+		if (blockSize > 0 && blockSize < 0x80000000 && blockSize != self.blockSize) {
 			// re-blockify the existing blocks
 			self.blockSize = blockSize;
 			[self setTextBlocks:self.textBlocks];
 		}
 		
 		// send a message containing the max block size to the watch
-		[watch appMessagesPushUpdate:@{@(PEB_TEXT_BLOCK_SIZE_KEY): @(-self.blockSize)} onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+		NSDictionary *blockSizeUpdate = @{ @((unsigned)PEB_TEXT_BLOCK_SIZE_KEY): @(-self.blockSize) };
+		[watch appMessagesPushUpdate:blockSizeUpdate onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
 			if (error) {
 				NSLog(@"Error while replying to block size query: %@", error);
 			}
@@ -388,12 +385,16 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 	NSAssert(self.blockSize != 0, @"The size of a block of text is zero.");
 	// check whether textBlocks is an array of arrays of words, or whether it's an array of words that needs to be blockified
 	if (!textBlocks || textBlocks.count == 0) {
-		//TODO: delete current text blocks from the watch
 		_textBlocks = nil;
+		// delete current text blocks from the watch
+		if (self.lastSentTextBlockIndex >= 0) {
+			[self sendTextBlockAtIndex:(NSUInteger)self.lastSentTextBlockIndex completion:nil];
+		}
+		[self sendTextBlockAtIndex:0 completion:nil];
 		return;
 	}
 	
-	NSMutableArray *allWords;
+	NSMutableArray *allWords; // this will be a 1-D array of all the words to be put into blocks
 	
 	if ([textBlocks[0] isKindOfClass:[NSArray class]]) {
 		// textBlocks is a 2-D array of words that must be reordered
@@ -434,6 +435,7 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 		NSLog(@"Pebble connected: %@", [watch name]);
 	#endif
 	self.connectedWatch = watch;
+	// Update the UI to reflect the connected watch
 	[self.delegate watch:watch didChangeConnectionStateToConnected:YES];
 }
 
@@ -443,8 +445,8 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 	#endif
 	if (self.connectedWatch == watch || [watch isEqual:self.connectedWatch]) {
 		self.connectedWatch = nil;
+		[self.delegate watch:watch didChangeConnectionStateToConnected:NO];
 	}
-	[self.delegate watch:watch didChangeConnectionStateToConnected:NO];
 }
 
 

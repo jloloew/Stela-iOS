@@ -209,41 +209,52 @@ static const CGFloat kAddressHeight = 24.0f;
 										};
 	[manager GET:@"http://access.alchemyapi.com/calls/url/URLGetText" parameters:requestParameters
 		 success:^(AFHTTPRequestOperation *operation, id responseObject) {
-			 
 			 // turn the responseObject into useful text
-			 if (![responseObject isKindOfClass:[NSDictionary class]]) {
+			 if (![responseObject isKindOfClass:[NSDictionary class]]) { // safety check
 				 NSLog(@"Error: responseObject is not a dictionary.");
 				 // hide the HUD
 				 [self.progressHUD hide:YES];
+				 // Tell the user that retrieval failed
+				 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
+																						  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
+																				   preferredStyle:UIAlertControllerStyleAlert];
+				 [self presentViewController:alertController animated:YES completion:nil];
 				 return;
 			 }
+			 
 			 NSDictionary *responseDict = responseObject;
 			 NSString *blockText = responseDict[@"text"];
-			 if (!blockText) {
+			 if (!blockText) { // safety check
 				 NSLog(@"Error: couldn't get text from JSON response.");
 				 // hide the HUD
 				 [self.progressHUD hide:YES];
+				 // Tell the user that retrieval failed
+				 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
+																						  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
+																				   preferredStyle:UIAlertControllerStyleAlert];
+				 [self presentViewController:alertController animated:YES completion:nil];
 				 return;
 			 }
+			 
+			 // This is an array of all the words on the page.
 			 NSArray *words = [blockText componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			 // send the words to the Pebble
-			 AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+			 
+			 // Send the words to the watch
+			 AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
 			 [appDelegate sendStringsToPebble:words completion:^(BOOL success) {
 				 if (success) {
-					 NSLog(@"Successfully sent words to Pebble.");
+					 NSLog(@"Successfully sent words to the watch.");
 					 // hide the HUD
 					 [self.progressHUD hide:YES];
 				 } else {
-					 NSLog(@"ERROR. Failed to send words to Pebble.");
-					 
-					 [[[UIAlertView alloc] initWithTitle:@"Error"
-												 message:@"Unable to send words to Pebble."
-												delegate:nil
-									   cancelButtonTitle:@"Ok"
-									   otherButtonTitles:nil] show];
-					 
+					 NSLog(@"ERROR. Failed to send words to the watch.");
 					 // hide the HUD
 					 [self.progressHUD hide:YES];
+					 // Tell the user that retrieval failed
+					 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
+																							  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
+																					   preferredStyle:UIAlertControllerStyleAlert];
+					 [self presentViewController:alertController animated:YES completion:nil];
 				 }
 			 }];
 		 }
