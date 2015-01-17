@@ -344,6 +344,11 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 //			return;
 //		}
 		NSUInteger blockIndex = *(uint32_t *)[update[@((unsigned)PEB_TEXT_BLOCK_NUMBER_KEY)] bytes];
+		
+		#if DEBUG
+			NSLog(@"Received request for block number %lu.", blockIndex);
+		#endif
+		
 		[self sendTextBlockAtIndex:blockIndex completion:^(BOOL success) {
 			#if DEBUG
 				NSLog(@"Successfully sent a new block (block number %lu).", (unsigned long)blockIndex);
@@ -351,6 +356,7 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 		}];
 	}
 	
+	// THIS CODE SHOULD BE UNUSED 
 	// process requests to get and set the text block size
 	if (update[@((unsigned)PEB_TEXT_BLOCK_SIZE_KEY)]) {
 		if (![update[@((unsigned)PEB_TEXT_BLOCK_SIZE_KEY)] isKindOfClass:[NSNumber class]]) {
