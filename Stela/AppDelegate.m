@@ -346,7 +346,7 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 		NSUInteger blockIndex = *(uint32_t *)[update[@((unsigned)PEB_TEXT_BLOCK_NUMBER_KEY)] bytes];
 		
 		#if DEBUG
-			NSLog(@"Received request for block number %lu.", blockIndex);
+			NSLog(@"Received request for block number %lu.", (unsigned long)blockIndex);
 		#endif
 		
 		[self sendTextBlockAtIndex:blockIndex completion:^(BOOL success) {
