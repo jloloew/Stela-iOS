@@ -201,12 +201,12 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.progressHUD.minShowTime = 3; // keep the spinner onscreen for at least 3 seconds
 	self.progressHUD.dimBackground = YES;
 	
-	void (^requestFailed)() = ^void() {
+	void (^requestFailed)(NSString *errorMessage) = ^void(NSString *errorMessage) {
 		// hide the HUD
 		[self.progressHUD hide:YES];
 		// Tell the user that retrieval failed
 		UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
-																				 message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
+																				 message:errorMessage ?: @""
 																		  preferredStyle:UIAlertControllerStyleAlert];
 		[alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Ok", nil)
 															style:UIAlertActionStyleDefault
@@ -225,7 +225,7 @@ static const CGFloat kAddressHeight = 24.0f;
 			 // turn the responseObject into useful text
 			 if (![responseObject isKindOfClass:[NSDictionary class]]) { // safety check
 				 NSLog(@"Error: responseObject is not a dictionary.");
-				 requestFailed();
+				 requestFailed(NSLocalizedString(@"Please wait a few moments, then try again.", nil));
 				 return;
 			 }
 			 
@@ -233,7 +233,7 @@ static const CGFloat kAddressHeight = 24.0f;
 			 NSString *blockText = responseDict[@"text"];
 			 if (!blockText) { // safety check
 				 NSLog(@"Error: couldn't get text from JSON response.");
-				 requestFailed();
+				 requestFailed(NSLocalizedString(@"Unable to get text from website. Stela doesn't work on PDFs, documents, or images.", nil));
 				 return;
 			 }
 			 
@@ -249,13 +249,13 @@ static const CGFloat kAddressHeight = 24.0f;
 					 [self.progressHUD hide:YES];
 				 } else {
 					 NSLog(@"ERROR. Failed to send words to the watch.");
-					 requestFailed();
+					 requestFailed(NSLocalizedString(@"Something went wrong. Please wait a few moments, then try again.", nil));
 				 }
 			 }];
 		 }
 		 failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 			 NSLog(@"Failed to get text from current website: %@", error);
-			 requestFailed();
+			 requestFailed(NSLocalizedString(@"Unable to get text from website. Stela doesn't work on PDFs, documents, or images.", nil));
 		 }];
 }
 

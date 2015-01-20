@@ -289,7 +289,7 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 					}
 					
 					// check if we're receiving nothing but errors
-					if (errorCount >= 10 && 1.0 * errorCount / wordNum >= 0.50) {
+					if (errorCount >= 50 && 1.0 * errorCount / wordNum >= 0.50) {
 						NSLog(@"Too many errors! Aborting send.");
 						success = NO;
 						return;
