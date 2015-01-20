@@ -201,6 +201,19 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.progressHUD.minShowTime = 3; // keep the spinner onscreen for at least 3 seconds
 	self.progressHUD.dimBackground = YES;
 	
+	void (^requestFailed)() = ^void() {
+		// hide the HUD
+		[self.progressHUD hide:YES];
+		// Tell the user that retrieval failed
+		UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
+																				 message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
+																		  preferredStyle:UIAlertControllerStyleAlert];
+		[alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Ok", nil)
+															style:UIAlertActionStyleDefault
+														  handler:nil]];
+		[self presentViewController:alertController animated:YES completion:nil];
+	};
+	
 	// turn the webpage into an array of words
 	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
 	NSDictionary *requestParameters = @{@"url": self.addressField.text,
@@ -212,13 +225,7 @@ static const CGFloat kAddressHeight = 24.0f;
 			 // turn the responseObject into useful text
 			 if (![responseObject isKindOfClass:[NSDictionary class]]) { // safety check
 				 NSLog(@"Error: responseObject is not a dictionary.");
-				 // hide the HUD
-				 [self.progressHUD hide:YES];
-				 // Tell the user that retrieval failed
-				 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
-																						  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
-																				   preferredStyle:UIAlertControllerStyleAlert];
-				 [self presentViewController:alertController animated:YES completion:nil];
+				 requestFailed();
 				 return;
 			 }
 			 
@@ -226,13 +233,7 @@ static const CGFloat kAddressHeight = 24.0f;
 			 NSString *blockText = responseDict[@"text"];
 			 if (!blockText) { // safety check
 				 NSLog(@"Error: couldn't get text from JSON response.");
-				 // hide the HUD
-				 [self.progressHUD hide:YES];
-				 // Tell the user that retrieval failed
-				 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
-																						  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
-																				   preferredStyle:UIAlertControllerStyleAlert];
-				 [self presentViewController:alertController animated:YES completion:nil];
+				 requestFailed();
 				 return;
 			 }
 			 
@@ -248,26 +249,13 @@ static const CGFloat kAddressHeight = 24.0f;
 					 [self.progressHUD hide:YES];
 				 } else {
 					 NSLog(@"ERROR. Failed to send words to the watch.");
-					 // hide the HUD
-					 [self.progressHUD hide:YES];
-					 // Tell the user that retrieval failed
-					 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
-																							  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
-																					   preferredStyle:UIAlertControllerStyleAlert];
-					 [self presentViewController:alertController animated:YES completion:nil];
+					 requestFailed();
 				 }
 			 }];
 		 }
 		 failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 			 NSLog(@"Failed to get text from current website: %@", error);
-			 // hide the HUD
-			 [self.progressHUD hide:YES];
-			 
-			 // Tell the user that retrieval failed
-			 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
-																					  message:NSLocalizedString(@"Please wait a few moments, then try again.", nil)
-																			   preferredStyle:UIAlertControllerStyleAlert];
-			 [self presentViewController:alertController animated:YES completion:nil];
+			 requestFailed();
 		 }];
 }
 
