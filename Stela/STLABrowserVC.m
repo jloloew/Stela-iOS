@@ -11,10 +11,13 @@
 #import "TargetConditionals.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import <AFNetworking.h>
-#import "Constants.h"
-#import "BrowserVC.h"
+#import "STLAConstants.h"
+#import "STLAMessenger.h"
+#import "STLABrowserVC.h"
 
-//static const CGFloat kNavBarHeight = 52.0f;
+
+__unused
+static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
 static const CGFloat kMargin = 10.0f;
 static const CGFloat kSpacer = 2.0f;
@@ -22,7 +25,7 @@ static const CGFloat kLabelFontSize = 12.0f;
 static const CGFloat kAddressHeight = 24.0f;
 
 
-@interface BrowserViewController () <UIGestureRecognizerDelegate, WKNavigationDelegate, PebbleConnectionNoticeDelegate>
+@interface STLABrowserViewController () <UIGestureRecognizerDelegate, WKNavigationDelegate>
 
 @property (nonatomic) WKWebView *webView;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *back;
@@ -36,6 +39,8 @@ static const CGFloat kAddressHeight = 24.0f;
 
 @property (strong, nonatomic) MBProgressHUD *progressHUD;
 
+@property (strong, nonatomic) id<NSObject> watchConnectionObserver;
+
 - (void)browseForward:(UIScreenEdgePanGestureRecognizer *)recognizer;
 - (void)browseBack:(UIScreenEdgePanGestureRecognizer *)recognizer;
 - (void)loadRequestFromString:(NSString *)urlString;
@@ -46,7 +51,8 @@ static const CGFloat kAddressHeight = 24.0f;
 
 @end
 
-@implementation BrowserViewController
+#pragma mark -
+@implementation STLABrowserViewController
 
 - (void)viewDidLoad
 {
@@ -92,15 +98,15 @@ static const CGFloat kAddressHeight = 24.0f;
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	NSString *savedURL = [defaults stringForKey:@"savedURL"];
 	if (!savedURL || [savedURL isEqualToString:@""]) {
-		savedURL = @"https://en.wikipedia.org/wiki/Pebble_watch";
-#if DEBUG
+		savedURL = kDefaultURL;
+	#if DEBUG
 		NSLog(@"Used default URL.");
 	} else {
 		NSLog(@"Used saved URL (%@).", savedURL);
-#endif
+	#endif
 	}
 	
-	/* Create the address bar */
+	// create the address bar
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer * 2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
 	address.text = savedURL;
@@ -117,17 +123,27 @@ static const CGFloat kAddressHeight = 24.0f;
 	[navBar addSubview:address];
 	self.addressField = address;
 	
-	// spins when we send data to the Pebble
+	// spins when we send data to the watch
 	self.progressHUD = nil;
 	
-	// For Pebble
-	((AppDelegate *)([UIApplication sharedApplication].delegate)).delegate = self;
+	// register for notifications to update the UI when the watch connects or disconnects
+	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+	self.watchConnectionObserver = [nc addObserverForName:STLAWatchConnectionStateChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
+		NSNumber *_connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
+		BOOL connected = [_connected boolValue];
+		self.sendToPebble.enabled = connected;
+	}];
 	
 	// Start up by loading the Pebble Wikipedia page
     [self loadRequestFromString:self.addressField.text];
 }
 
 - (void)dealloc {
+	// notification center
+	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+	[nc removeObserver:self.watchConnectionObserver];
+	self.watchConnectionObserver = nil;
+	// KVO
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(title))];
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(URL))];
 	[self.webView removeObserver:self forKeyPath:@"loading"];
@@ -182,10 +198,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.stop.enabled = self.webView.loading;
 #if TARGET_IPHONE_SIMULATOR
 	self.sendToPebble.enabled = YES;
-#else // TARGET_IPHONE_SIMULATOR
-	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
-	self.sendToPebble.enabled = [appDelegate.connectedWatch isConnected];
-#endif // TARGET_IPHONE_SIMULATOR
+#endif
 }
 
 - (void)updateTitle:(NSString *)newTitle {
@@ -220,16 +233,16 @@ static const CGFloat kAddressHeight = 24.0f;
 										@"apikey": API_KEY,
 										@"outputMode": @"json"
 										};
-	[manager GET:@"http://access.alchemyapi.com/calls/url/URLGetText" parameters:requestParameters
+	[manager GET:API_URL parameters:requestParameters
 		 success:^(AFHTTPRequestOperation *operation, id responseObject) {
 			 // turn the responseObject into useful text
 			 if (![responseObject isKindOfClass:[NSDictionary class]]) { // safety check
 				 NSLog(@"Error: responseObject is not a dictionary.");
-				 requestFailed(NSLocalizedString(@"Please wait a few moments, then try again.", nil));
+				 requestFailed(NSLocalizedString(@"Stela's servers aren't able to turn this page into text right now. Please try again later.", nil));
 				 return;
 			 }
 			 
-			 NSDictionary *responseDict = responseObject;
+			 NSDictionary *responseDict = (NSDictionary *)responseObject;
 			 NSString *blockText = responseDict[@"text"];
 			 if (!blockText) { // safety check
 				 NSLog(@"Error: couldn't get text from JSON response.");
@@ -241,8 +254,8 @@ static const CGFloat kAddressHeight = 24.0f;
 			 NSArray *words = [blockText componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 			 
 			 // Send the words to the watch
-			 AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
-			 [appDelegate sendStringsToPebble:words completion:^(BOOL success) {
+			 STLAMessenger *messenger = [STLAMessenger defaultMessenger];
+			 [messenger sendStringsToWatch:words completion:^(BOOL success) {
 				 if (success) {
 					 NSLog(@"Successfully sent words to the watch.");
 					 // hide the HUD
@@ -257,10 +270,6 @@ static const CGFloat kAddressHeight = 24.0f;
 			 NSLog(@"Failed to get text from current website: %@", error);
 			 requestFailed(NSLocalizedString(@"Unable to get text from website. Stela doesn't work on PDFs, documents, or images.", nil));
 		 }];
-}
-
-- (void)watch:(PBWatch *)watch didChangeConnectionStateToConnected:(BOOL)isConnected {
-	self.sendToPebble.enabled = isConnected;
 }
 
 #pragma mark WKNavigationDelegate
