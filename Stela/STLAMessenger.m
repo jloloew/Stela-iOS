@@ -6,6 +6,8 @@
 //  Copyright (c) 2015 Justin Loew. All rights reserved.
 //
 
+#import <PebbleKit/NSDictionary+Pebble.h>
+#import <PebbleKit/NSNumber+stdint.h>
 #import "STLAConstants.h"
 #import "STLAWordManager.h"
 #import "STLAMessenger.h"
@@ -147,13 +149,15 @@
 	[wordManager setTextBlocks:(NSMutableArray *)words];
 	
 	// reset the watch
-	NSDictionary *message = @{@(RESET_KEY): @(0)};
+	NSDictionary *message = @{[NSNumber numberWithUint32:RESET_KEY]: [NSNumber numberWithUint32:0]};
 	[self sendMessage:message];
 	// tell the watch the total number of blocks
-	message = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY): @(wordManager.textBlocks.count)};
+	message = @{[NSNumber numberWithUint32:TOTAL_NUMBER_OF_BLOCKS_KEY]:
+					[NSNumber numberWithUint32:(uint32_t)wordManager.textBlocks.count]};
 	[self sendMessage:message];
 	// tell the watch the block size
-	message = @{@(TEXT_BLOCK_SIZE_KEY): @(wordManager.blockSize)};
+	message = @{[NSNumber numberWithUint32:TEXT_BLOCK_SIZE_KEY]:
+					[NSNumber numberWithUint32:(uint32_t)wordManager.blockSize]};
 	[self sendMessage:message];
 	
 	// send the first block to the watch
@@ -187,9 +191,15 @@
 	}
 	
 	[self.connectedWatch appMessagesPushUpdate:message onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+		if (error) {
+			NSLog(@"%s:%d: Error sending message to watch: %@",
+				  __PRETTY_FUNCTION__, __LINE__, error);
+		}
 		#if DEBUG
+		else {
 			NSLog(@"%s:%d: Successfully sent message to watch: %@",
 				  __PRETTY_FUNCTION__, __LINE__, update);
+		}
 		#endif
 	}];
 }
@@ -242,6 +252,9 @@
 					return;
 				}
 				
+				// wait for the watch app to finish launching
+				usleep(1000); // 1 ms
+				
 				// send the strings to the watch
 				__block NSUInteger errorCount = 0; // how many errors we've encountered
 												   // in the course of sending messages so far
@@ -260,7 +273,7 @@
 					}
 					
 					// check if we're receiving nothing but errors
-					NSUInteger minErrorsBeforeFailure = 20;
+					NSUInteger minErrorsBeforeFailure = 3;
 					if (errorCount >= minErrorsBeforeFailure) {
 						NSLog(@"%s:%d: Too many errors! Aborting send.",
 							  __PRETTY_FUNCTION__, __LINE__);
@@ -294,13 +307,27 @@
 							}
 							return;
 						}
-						dict[@(APPMESG_BLOCK_NUMBER_KEY)] = @(_blockIndex);
-						dict[@(APPMESG_WORD_START_INDEX_KEY)] = @(wordNum);
-						dict[@(APPMESG_NUM_WORDS_KEY)] = @(words.count);
+						NSNumber *dictKey = [NSNumber numberWithUint32:APPMESG_BLOCK_NUMBER_KEY];
+						dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)_blockIndex];
+						dictKey = [NSNumber numberWithUint32:APPMESG_WORD_START_INDEX_KEY];
+						dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)wordNum];
+						dictKey = [NSNumber numberWithUint32:APPMESG_NUM_WORDS_KEY];
+						dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)words.count];
+						dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD_KEY];
+						dict[dictKey] = [NSNumber numberWithUint32:APPMESG_FIRST_WORD];
+						
 						// add the words to the dictionary
-						for (NSUInteger i = 0; i < words.count; i++) {
-							dict[@(i)] = words[i];
+						for (uint32_t i = 0; i < words.count; i++) {
+							dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD + i];
+							dict[dictKey] = words[i];
 						}
+						
+						#if DEBUG
+							// log the size of the dictionary we're trying to send
+							NSData *data = [dict pebbleDictionaryData:nil];
+							NSLog(@"%s:%d: sending dictionary of size %lu",
+								  __PRETTY_FUNCTION__, __LINE__, data.length);
+						#endif
 						
 						// send the dictionary
 						[self.connectedWatch appMessagesPushUpdate:dict

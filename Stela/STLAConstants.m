@@ -10,7 +10,7 @@
 #import "STLAConstants.h"
 
 
-NSUInteger const CURRENT_PATCH_VERSION = 0;
+NSUInteger const CURRENT_PATCH_VERSION = 1;
 
 NSString * const API_KEY = @"f6687a0711a74306ac45cb89c08b026fe0cd03d6";
 NSString * const API_URL = @"http://access.alchemyapi.com/calls/url/URLGetText";
@@ -23,7 +23,7 @@ NSString * const stelaUUIDString = @"6db75b90-8dad-4490-94ca-0fef4296c78e";
 
 NSString * const kDefaultURL = @"https://en.wikipedia.org/wiki/Pebble_watch";
 
-NSInteger const kPebbleMaxMessageSize = 200;
+NSUInteger const kPebbleMaxMessageSize = 100;
 
 NSString * const STLAWatchConnectionStateChangeNotification		= @"com.justinloew.stela.watchConnectionStateChange";
 NSString * const kWatchConnectionStateChangeNotificationBoolKey	= @"com.justinloew.stela.watchConnectionStateChange.isConnected";
@@ -34,7 +34,7 @@ const Version stla_unknown_version_number = { 0, 255, 255 };
 Version stla_get_iOS_Stela_version() {
 	NSDictionary *infoDict = [[NSBundle mainBundle] infoDictionary];
 	NSString *verStr = infoDict[@"CFBundleShortVersionString"];
-	verStr = [NSString stringWithFormat:@"%@.%d", verStr, CURRENT_PATCH_VERSION];
+	verStr = [NSString stringWithFormat:@"%@.%hhu", verStr, (unsigned char)CURRENT_PATCH_VERSION]; // max version is 255, only use 8 bits
 	return stla_string_to_version(verStr);
 }
 

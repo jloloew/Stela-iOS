@@ -23,7 +23,7 @@ extern NSString * const stelaUUIDString;
 extern NSString * const kDefaultURL;
 
 /// The maximum size of a message that a Pebble can send or receive, in bytes.
-extern NSInteger const kPebbleMaxMessageSize; // actual max size is ~255, but I'll allow for overhead
+extern NSUInteger const kPebbleMaxMessageSize; // actual max size is ~255, but I'll allow for overhead
 
 /// The name of the notification that is fired each time a watch connects or
 /// disconnects.
@@ -35,9 +35,9 @@ extern NSString * const kWatchConnectionStateChangeNotificationBoolKey;
 
 
 /// The keys used for sending messages between the watch and the phone.
-typedef NS_ENUM(NSInteger, AppMessageKey) {
+typedef NS_ENUM(uint32_t, AppMessageKey) {
 	/// For reporting an error, as a string.
-	ERROR_KEY = -8,
+	ERROR_KEY = 0,
 	
 	/// For sending the version of Stela as a string. E.g., "255.255.255"
 	/// To query the value, send a version beginning with a zero ("0.x.x").
@@ -70,7 +70,17 @@ typedef NS_ENUM(NSInteger, AppMessageKey) {
 	/// Holds the index of the block that the words in the current message belong in.
 	/// Sent by the phone, in the same message as an array of strings.
 	/// Never sent by the watch.
-	APPMESG_BLOCK_NUMBER_KEY
+	APPMESG_BLOCK_NUMBER_KEY,
+	
+	/// Used to send the dictionary key of the first word within this message.
+	/// Sent by the phone, in the same message as an array of strings.
+	/// Never sent by the watch.
+	APPMESG_FIRST_WORD_KEY,
+	
+	/// The value stored for this key is the first word.
+	/// Subsequent words should be stored for increasing keys from this key.
+	/// This value is always APPMESG_FIRST_WORD_KEY + 1.
+	APPMESG_FIRST_WORD
 };
 
 /// Used for sending version numbers to and from the watch. Ex.: "1.0.31"

@@ -109,6 +109,7 @@
 				}
 				// add the word to the array
 				[words addObject:word];
+				currentSize += wordSize;
 			} while (++wIndex < wordArray.count);
 		}
 	}
