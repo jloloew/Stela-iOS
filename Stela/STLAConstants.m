@@ -27,7 +27,7 @@ NSString * const stelaUUIDString = @"6db75b90-8dad-4490-94ca-0fef4296c78e";
 
 NSString * const kDefaultURL = @"https://wikipedia.org/wiki/Pebble_watch";
 
-NSUInteger const kPebbleMaxMessageSize = 30;
+NSUInteger const kPebbleMaxMessageSize = 25;
 
 NSString * const STLAErrorDomain = @"com.justinloew.stela.error";
 

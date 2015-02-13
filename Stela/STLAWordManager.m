@@ -11,7 +11,7 @@
 
 
 /// The default block size (measured in words, not bytes).
-static NSUInteger const kDefaultBlockSize = 300; // in words, not bytes
+static NSUInteger const kDefaultBlockSize = 200; // in words, not bytes
 
 
 @implementation STLAWordManager
@@ -46,11 +46,10 @@ static NSUInteger const kDefaultBlockSize = 300; // in words, not bytes
 		return;
 	}
 	
-	NSMutableArray *allWords; // this will be a 1-D array of all the words
+	NSMutableArray *allWords = [NSMutableArray array]; // this will be a 1-D array of all the words
 	
 	if ([textBlocks[0] isKindOfClass:[NSArray class]]) {
 		// textBlocks is a 2-D array of words that must be reordered
-		allWords = [NSMutableArray array];
 		// ObjC fast enumeration doesn't guarantee order, must use old school for loop
 		for (NSUInteger i = 0; i < textBlocks.count; i++) {
 			NSArray *textBlock = textBlocks[i];
@@ -59,6 +58,7 @@ static NSUInteger const kDefaultBlockSize = 300; // in words, not bytes
 	} else if ([textBlocks[0] isKindOfClass:[NSString class]]) {
 		// textBlocks is a 1-D array of words
 		for (NSUInteger i = 0; i < textBlocks.count; i++) {
+			// make sure each "word" in allWords is actually a valid word
 			if ([textBlocks[i] isKindOfClass:[NSString class]]) {
 				if (![textBlocks[i] isEqualToString:@""]) {
 					[allWords addObject:textBlocks[i]];
@@ -70,9 +70,6 @@ static NSUInteger const kDefaultBlockSize = 300; // in words, not bytes
 			  __PRETTY_FUNCTION__, __LINE__, [textBlocks[0] class]);
 		return;
 	}
-	
-	// make sure each "word" in allWords is actually a valid word
-	
 	
 	// allWords is now a 1-D array of all the words to be put into blocks
 	NSUInteger numBlocks = ((allWords.count - 1) / self.blockSize) + 1;

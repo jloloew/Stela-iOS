@@ -316,6 +316,9 @@
 										NSDictionary *update,
 										NSError *error)
 	{
+		// add a small delay to let the watch catch up
+		usleep(100);
+		
 		if (wordNum >= textBlock.count) {
 			// no words left to send
 			if (handler) {
