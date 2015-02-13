@@ -21,6 +21,14 @@
 /// Perform initialization specific to the Pebble watch.
 - (void)setUpPebble;
 
+/// Validate a dictionary in preparation for sending it via AppMessage.
+/// Keys must be NSNumbers and values must be NSNumber, NSString, or NSData.
+/// NSNumbers are converted to their Pebble-compatible NSNumber equivalents.
+///
+/// @param dictionary The dictionary to convert.
+/// @return The converted dictionary, or @c nil on error.
+- (NSDictionary *)prepareDictionaryForAppMessage:(NSDictionary *)dictionary;
+
 /// This is a convenience method to send a text block to the watch.
 /// This method starts sending the block in the background and returns immediately.
 ///
@@ -182,38 +190,210 @@
 
 #pragma mark Sending messages
 
+- (NSDictionary *)prepareDictionaryForAppMessage:(NSDictionary *)dictionary
+{
+	NSMutableDictionary *dict = [NSMutableDictionary dictionary]; ///< output dictionary
+	for (id key in dictionary) {
+		if ([key isKindOfClass:[NSNumber class]]) {
+			// convert the key
+			NSInteger intKey = [key integerValue];
+			NSNumber *keyForPebble = [NSNumber numberWithInt32:(int32_t)intKey];
+			// convert the value
+			id value = dictionary[key];
+			if ([value isKindOfClass:[NSNumber class]]) {
+				NSNumber *newValue = [NSNumber numberWithInt32:(int32_t)[value integerValue]];
+				dict[keyForPebble] = newValue;
+			} else if ([value isKindOfClass:[NSString class]] ||
+					   [value isKindOfClass:[NSData class]]) {
+				dict[keyForPebble] = value;
+			} else {
+				NSLog(@"%s:%d: Value is not an NSNumber, NSString, or NSData (it's a %@).",
+					  __PRETTY_FUNCTION__, __LINE__, [value class]);
+				return nil;
+			}
+		} else {
+			NSLog(@"%s:%d: Key is not an NSNumber (it's a %@)",
+				  __PRETTY_FUNCTION__, __LINE__, [key class]);
+			return nil;
+		}
+	}
+	return dict;
+}
+
 - (void)sendMessage:(NSDictionary *)message
 {
 	if (!self.connectedWatch) {
-		NSLog(@"%s: Trying to send message with no watch connected.",
-			  __PRETTY_FUNCTION__);
+		NSLog(@"%s:%d: Trying to send message with no watch connected.",
+			  __PRETTY_FUNCTION__, __LINE__);
 		return;
 	}
 	
-	[self.connectedWatch appMessagesPushUpdate:message onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-		if (error) {
-			NSLog(@"%s:%d: Error sending message to watch: %@",
-				  __PRETTY_FUNCTION__, __LINE__, error);
-		}
-		#if DEBUG
-		else {
-			NSLog(@"%s:%d: Successfully sent message to watch: %@",
-				  __PRETTY_FUNCTION__, __LINE__, update);
-		}
-		#endif
-	}];
+	// validate the message before sending it
+	message = [self prepareDictionaryForAppMessage:message];
+	if (message) {
+		[self.connectedWatch appMessagesPushUpdate:message onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
+			if (error) {
+				NSLog(@"%s:%d: Error sending message to watch: %@",
+					  __PRETTY_FUNCTION__, __LINE__, error);
+			}
+			#if DEBUG
+			else {
+				NSLog(@"%s:%d: Successfully sent message to watch: %@",
+					  __PRETTY_FUNCTION__, __LINE__, update);
+			}
+			#endif
+		}];
+	}
 }
 
-- (void)sendBlockAtIndex:(NSUInteger)blockIndex
+- (void)sendBlockAtIndex:(NSUInteger)_blockIndex
 			  completion:(void (^)(BOOL success))handler
 {
 	STLAWordManager *wordManager = [STLAWordManager defaultManager];
-	NSAssert(blockIndex < wordManager.textBlocks.count, @"block index out of range");
+	NSAssert(_blockIndex < wordManager.textBlocks.count, @"block index out of range");
 	
 	// create copies of the parameters with block scope storage
-	__block NSUInteger _blockIndex = blockIndex; // (ObjC block syntax)-safe index of the (text block) to send
-	__block void (^_handler)(BOOL success) = handler;
-	__block NSArray *textBlock = wordManager.textBlocks[blockIndex];
+	__block NSUInteger blockIndex = _blockIndex; // (ObjC block syntax)-safe index of the (text block) to send
+//	__block void (^_handler)(BOOL success) = handler;
+	NSArray *__weak textBlock = wordManager.textBlocks[blockIndex];
+	
+	// Create blocks to send to Pebble methods as callbacks.
+	// Declare the blocks up front. This is kind of like a file within a file, huh?
+	
+	// silence warnings about @params on blocks
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wdocumentation"
+	
+	/// The code to execute after each word is delivered.
+	///
+	/// @param watch The Pebble to which the words are being sent.
+	/// @param update The dictionary that was just sent to the Pebble.
+	/// @param error Contains details of the error that occurred, or @c nil if there was no error.
+	__block void (^sendNextWords)(PBWatch *__strong watch, NSDictionary *update, NSError *error);
+	
+	/// Keeps a strong pointer to @c sendNextWords long enough to send it to the Pebble method.
+	void (^strongBlock)(PBWatch *watch, NSDictionary *update, NSError *error);
+	
+	/// Called after the phone finishes launching the watch app.
+	void (^watchAppLaunchedCallback)(PBWatch *watch, NSError *error);
+	/// Called after the phone checks whether AppMessage is supported by the Pebble.
+	void (^appMessagesSupportedCallback)(PBWatch *watch, BOOL appMessagesIsSupported);
+	
+	#pragma clang diagnostic pop
+	
+	
+	__block NSUInteger errorCount = 0; ///< How many errors we've encountered in the course of sending messages so far
+	__block NSUInteger wordNum = 0; ///< The index of the last sent word in the block.
+	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+	sendNextWords = strongBlock = ^void(PBWatch *watch, NSDictionary *update, NSError *error) {
+		if (wordNum >= textBlock.count) {
+			// no words left to send
+			if (handler) {
+				handler(YES);
+			}
+			return;
+		}
+		
+		// check if we're receiving nothing but errors
+		NSUInteger const minErrorsBeforeFailure = 3;
+		if (errorCount >= minErrorsBeforeFailure) {
+			NSLog(@"%s:%d: Too many errors! Aborting send.",
+				  __PRETTY_FUNCTION__, __LINE__);
+			if (handler) {
+				handler(NO);
+			}
+			return;
+		}
+		
+		// check for an error while sending the previous words
+		if (error) {
+			// an error occurred, retry sending the same dict
+			NSLog(@"%s:%d: Error while sending words: %@. Retrying send.",
+				  __PRETTY_FUNCTION__, __LINE__, error);
+			errorCount++;
+			[self.connectedWatch appMessagesPushUpdate:dict
+												onSent:sendNextWords];
+		} else {
+			// no error found, send a new dictionary
+			// create the dictionary of words to send
+			NSArray *words = [[STLAWordManager defaultManager] getWordsOfSize:kPebbleMaxMessageSize
+															 fromBlockAtIndex:blockIndex
+															  fromWordAtIndex:wordNum];
+			if (!words) { // safety check
+				#if DEBUG
+					NSLog(@"%s:%d: Either no words left to send or an error occurred.",
+						  __PRETTY_FUNCTION__, __LINE__);
+				#endif
+				if (handler) {
+					handler(NO);
+				}
+				return;
+			}
+			NSNumber *dictKey = [NSNumber numberWithUint32:APPMESG_BLOCK_NUMBER_KEY];
+			dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)blockIndex];
+			dictKey = [NSNumber numberWithUint32:APPMESG_WORD_START_INDEX_KEY];
+			dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)wordNum];
+			dictKey = [NSNumber numberWithUint32:APPMESG_NUM_WORDS_KEY];
+			dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)words.count];
+			dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD_KEY];
+			dict[dictKey] = [NSNumber numberWithUint32:APPMESG_FIRST_WORD];
+			
+			// add the words to the dictionary
+			for (uint32_t i = 0; i < words.count; i++) {
+				dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD + i];
+				dict[dictKey] = words[i];
+			}
+			
+			#if DEBUG
+				// log the size of the dictionary we're trying to send
+				NSData *data = [dict pebbleDictionaryData:nil];
+				NSLog(@"%s:%d: sending dictionary of size %lu",
+					  __PRETTY_FUNCTION__, __LINE__, data.length);
+			#endif
+			
+			// send the dictionary
+			[self.connectedWatch appMessagesPushUpdate:dict
+												onSent:sendNextWords];
+			// update wordNum
+			wordNum += words.count;
+		}
+	};
+	
+	watchAppLaunchedCallback = ^void(PBWatch *watch, NSError *error) {
+		if (error) {
+			NSLog(@"%s: Error launching watch app: %@",
+				  __PRETTY_FUNCTION__, error);
+			if (handler) {
+				handler(NO);
+			}
+			return;
+		}
+		
+		// wait for the watch app to finish launching
+		usleep(1000); // 1 ms
+		
+		// send the strings to the watch
+		
+		
+		// actually run the block
+		[self.connectedWatch appMessagesPushUpdate:dict onSent:sendNextWords];
+	};
+	
+	appMessagesSupportedCallback = ^void(PBWatch *watch, BOOL isAppMessagesSupported) {
+		if (!isAppMessagesSupported) {
+			NSLog(@"%s: App messages not supported!", __PRETTY_FUNCTION__);
+			if (handler) {
+				handler(NO);
+			}
+			return;
+		}
+		
+		// launch the watch app
+		[watch appMessagesLaunch:watchAppLaunchedCallback];
+	};
+	
+	
+	// Enough blocks, let's actually run some code.
 	
 	// check whether we're connected to a watch
 	if (!self.connectedWatch) {
@@ -232,115 +412,7 @@
 		return;
 	} else {
 		// a watch is connected
-		[self.connectedWatch appMessagesGetIsSupported:^(PBWatch *watch, BOOL isAppMessagesSupported) {
-			if (!isAppMessagesSupported) {
-				NSLog(@"%s: App messages not supported!", __PRETTY_FUNCTION__);
-				if (_handler) {
-					_handler(NO);
-				}
-				return;
-			}
-			
-			// launch the watch app
-			[watch appMessagesLaunch:^(PBWatch *watch, NSError *error) {
-				if (error) {
-					NSLog(@"%s: Error launching watch app: %@",
-						  __PRETTY_FUNCTION__, error);
-					if (_handler) {
-						_handler(NO);
-					}
-					return;
-				}
-				
-				// wait for the watch app to finish launching
-				usleep(1000); // 1 ms
-				
-				// send the strings to the watch
-				__block NSUInteger errorCount = 0; // how many errors we've encountered
-												   // in the course of sending messages so far
-				__block NSUInteger wordNum = 0;
-				__block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-				// the code to execute after each word is delivered
-				void (^sendNextWords)(PBWatch *watch, NSDictionary *update, NSError *error);
-				__block __weak void (^weakBlock)(PBWatch *watch, NSDictionary *update, NSError *error);
-				weakBlock = sendNextWords = ^void(PBWatch *watch, NSDictionary *update, NSError *error) {
-					if (wordNum >= textBlock.count) {
-						// no words left to send
-						if (_handler) {
-							_handler(YES);
-						}
-						return;
-					}
-					
-					// check if we're receiving nothing but errors
-					NSUInteger minErrorsBeforeFailure = 3;
-					if (errorCount >= minErrorsBeforeFailure) {
-						NSLog(@"%s:%d: Too many errors! Aborting send.",
-							  __PRETTY_FUNCTION__, __LINE__);
-						if (_handler) {
-							_handler(NO);
-						}
-						return;
-					}
-					
-					// check for an error while sending the previous words
-					if (error) {
-						// an error occurred, retry sending the same dict
-						NSLog(@"%s:%d: Error while sending words: %@",
-							  __PRETTY_FUNCTION__, __LINE__, error);
-						errorCount++;
-						[self.connectedWatch appMessagesPushUpdate:dict
-															onSent:weakBlock];
-					} else {
-						// no error found, send a new dictionary
-						// create the dictionary of words to send
-						NSArray *words = [[STLAWordManager defaultManager] getWordsOfSize:kPebbleMaxMessageSize
-																		 fromBlockAtIndex:_blockIndex
-																		  fromWordAtIndex:wordNum];
-						if (!words) { // safety check
-							#if DEBUG
-								NSLog(@"%s:%d: Either no words left to send or an error occurred.",
-									  __PRETTY_FUNCTION__, __LINE__);
-							#endif
-							if (_handler) {
-								_handler(NO);
-							}
-							return;
-						}
-						NSNumber *dictKey = [NSNumber numberWithUint32:APPMESG_BLOCK_NUMBER_KEY];
-						dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)_blockIndex];
-						dictKey = [NSNumber numberWithUint32:APPMESG_WORD_START_INDEX_KEY];
-						dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)wordNum];
-						dictKey = [NSNumber numberWithUint32:APPMESG_NUM_WORDS_KEY];
-						dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)words.count];
-						dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD_KEY];
-						dict[dictKey] = [NSNumber numberWithUint32:APPMESG_FIRST_WORD];
-						
-						// add the words to the dictionary
-						for (uint32_t i = 0; i < words.count; i++) {
-							dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD + i];
-							dict[dictKey] = words[i];
-						}
-						
-						#if DEBUG
-							// log the size of the dictionary we're trying to send
-							NSData *data = [dict pebbleDictionaryData:nil];
-							NSLog(@"%s:%d: sending dictionary of size %lu",
-								  __PRETTY_FUNCTION__, __LINE__, data.length);
-						#endif
-						
-						// send the dictionary
-						[self.connectedWatch appMessagesPushUpdate:dict
-															onSent:weakBlock];
-						// update wordNum
-						wordNum += words.count;
-					}
-				};
-				
-				// actually run the block
-				[self.connectedWatch appMessagesPushUpdate:dict onSent:sendNextWords];
-			}];
-		}];
+		[self.connectedWatch appMessagesGetIsSupported:appMessagesSupportedCallback];
 	}
 }
 
@@ -409,7 +481,7 @@
 	return;
 }
 
-#pragma mark Helpers for receiveMessage
+#pragma mark Helpers for receiving messages
 
 - (void)receiveBlockCount:(NSNumber *)blockCount {
 	#pragma unused(blockCount)

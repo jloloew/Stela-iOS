@@ -24,7 +24,7 @@
 /// Delete the text on the watch.
 - (void)resetWatch;
 
-///
+/// 
 - (void)sendStringsToWatch:(NSArray *)words
 				completion:(void (^)(BOOL success))handler;
 
