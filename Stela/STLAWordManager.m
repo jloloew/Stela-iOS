@@ -10,7 +10,8 @@
 #import "STLAWordManager.h"
 
 
-#define kDefaultBlockSize 300 // in words, not bytes
+/// The default block size (measured in words, not bytes).
+static NSUInteger const kDefaultBlockSize = 300; // in words, not bytes
 
 
 @implementation STLAWordManager
@@ -33,7 +34,9 @@
 }
 
 - (void)setTextBlocks:(NSMutableArray *)textBlocks {
-	NSAssert(self.blockSize != 0, @"The size of a block of text is zero.");
+	NSAssert(self.blockSize != 0, @"%s:%d: The size of a block of text is zero.",
+			 __PRETTY_FUNCTION__, __LINE__);
+	
 	// check whether textBlocks is an array of arrays of words,
 	// or whether it's an array of words that needs to be blockified
 	if (!textBlocks || textBlocks.count == 0) {
@@ -55,12 +58,21 @@
 		}
 	} else if ([textBlocks[0] isKindOfClass:[NSString class]]) {
 		// textBlocks is a 1-D array of words
-		allWords = textBlocks;
+		for (NSUInteger i = 0; i < textBlocks.count; i++) {
+			if ([textBlocks[i] isKindOfClass:[NSString class]]) {
+				if (![textBlocks[i] isEqualToString:@""]) {
+					[allWords addObject:textBlocks[i]];
+				}
+			}
+		}
 	} else {
-		NSLog(@"%s: Parameter contains neither blocks nor words. (Actual class is %@)",
-			  __PRETTY_FUNCTION__, [textBlocks[0] class]);
+		NSLog(@"%s:%d: Parameter contains neither blocks nor words. (Actual class is %@)",
+			  __PRETTY_FUNCTION__, __LINE__, [textBlocks[0] class]);
 		return;
 	}
+	
+	// make sure each "word" in allWords is actually a valid word
+	
 	
 	// allWords is now a 1-D array of all the words to be put into blocks
 	NSUInteger numBlocks = ((allWords.count - 1) / self.blockSize) + 1;
@@ -80,8 +92,8 @@
 	}
 	
 	#if DEBUG
-		NSLog(@"%s: Added %lu words, resulting in %lu blocks holding %lu words each.",
-			  __PRETTY_FUNCTION__, (unsigned long)allWords.count,
+		NSLog(@"%s:%d: Added %lu words, resulting in %lu blocks holding %lu words each.",
+			  __PRETTY_FUNCTION__, __LINE__, (unsigned long)allWords.count,
 			  (unsigned long)_textBlocks.count, (unsigned long)self.blockSize);
 	#endif
 }
@@ -90,27 +102,30 @@
 		   fromBlockAtIndex:(NSUInteger)blockIndex
 			fromWordAtIndex:(NSUInteger)wordIndex
 {
-	NSMutableArray *words = nil;
+	NSMutableArray *words = nil; ///< holds the words to get
 	
 	if (blockIndex < self.textBlocks.count) {
-		NSArray *wordArray = self.textBlocks[blockIndex];
-		if (wordIndex < wordArray.count) {
+		NSArray *textBlock = self.textBlocks[blockIndex];
+		if (wordIndex < textBlock.count) {
 			words = [NSMutableArray array];
-			NSUInteger currentSize = 0;
+			NSUInteger currentSize = 0; ///< The size of all the words in @c words, in bytes.
 			NSUInteger wIndex = wordIndex;
 			do {
-				NSString *word = wordArray[wIndex];
+				NSString *word = textBlock[wIndex];
 				NSUInteger wordSize = [word lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 				if (wordSize == 0) {
 					break;
+				} else {
+					wordSize += 1; // account for the string's NULL-terminator
 				}
 				if (currentSize + wordSize > numBytes) {
+					// stop before the array gets too big
 					break;
 				}
 				// add the word to the array
 				[words addObject:word];
 				currentSize += wordSize;
-			} while (++wIndex < wordArray.count);
+			} while (++wIndex < textBlock.count);
 		}
 	}
 	
@@ -118,6 +133,7 @@
 	if (words.count == 0) {
 		words = nil;
 	}
+	
 	return words;
 }
 

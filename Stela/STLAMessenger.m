@@ -13,7 +13,10 @@
 #import "STLAMessenger.h"
 
 
-@interface STLAMessenger () <PBPebbleCentralDelegate>
+@interface STLAMessenger () <PBPebbleCentralDelegate, PBWatchDelegate>
+
+/// Whether the watch contains any text to read.
+@property BOOL watchIsEmpty;
 
 /// The version of Stela running on the currently connected watch.
 @property Version watchVersion;
@@ -35,13 +38,15 @@
 /// @param blockIndex The index of the block to send.
 /// @param handler A block to be called on completion.
 - (void)sendBlockAtIndex:(NSUInteger)blockIndex
-			  completion:(void(^)(BOOL success))handler;
+			  completion:(void (^)(BOOL success))handler;
 
 /// Send a dictionary to the watch. The keys should be AppMessageKeys.
 /// It is the caller's responsibility to use the correct value types with each key.
 ///
 /// @param message The key-value pair or pairs to send.
-- (void)sendMessage:(NSDictionary *)message;
+/// @param handler The callback to run when the message is done sending.
+- (void)sendMessage:(NSDictionary *)message
+		 completion:(void (^)(PBWatch *watch, NSDictionary *update, NSError *error))handler;
 
 /// Handle a new message from the watch. This method is a sort of router for messages.
 /// This method passes the message on to one of several helper methods.
@@ -53,6 +58,12 @@
 ///
 /// @param blockCount The total number of blocks.
 - (void)receiveBlockCount:(NSNumber *)blockCount;
+
+/// Handle a received request for a block. This method starts sending the block
+/// at the requested index over to the watch.
+///
+/// @param requestedBlockIndex The index of the block that the phone should send to the watch.
+- (void)receiveBlockRequest:(NSNumber *)requestedBlockIndex;
 
 /// Handle a received block size query.
 ///
@@ -95,8 +106,8 @@
 }
 
 - (instancetype)init {
-	self = [super init];
-	if (self) {
+	if (self = [super init]) {
+		self.watchIsEmpty = YES;
 		self.watchVersion = (Version) { 0, 255, 255 };
 		[self setUpPebble];
 	}
@@ -106,7 +117,7 @@
 - (void)setUpPebble {
 	PBPebbleCentral *pebbleCentral = [PBPebbleCentral defaultCentral];
 	
-	[pebbleCentral setDelegate:self];
+	pebbleCentral.delegate = self;
 	
 	// Set the UUID of the app
 	uuid_t stelaUUIDBytes;
@@ -114,14 +125,21 @@
 	[stelaUUID getUUIDBytes:stelaUUIDBytes];
 	NSData *UUIDData = [NSData dataWithBytes:stelaUUIDBytes length:sizeof(uuid_t)];
 	[pebbleCentral setAppUUID:UUIDData];
+	if (![pebbleCentral hasValidAppUUID]) { // safety check
+		NSLog(@"%s:%d: Our app UDID is invalid!", __PRETTY_FUNCTION__, __LINE__);
+	}
 	
-	self.connectedWatch = [pebbleCentral lastConnectedWatch];
+	
+	self.connectedWatch = pebbleCentral.lastConnectedWatch.isConnected ? pebbleCentral.lastConnectedWatch : nil;
 	#if DEBUG
-		NSLog(@"Last connected watch: %@", self.connectedWatch);
+		NSLog(@"%s:%d: Last connected watch: %@",
+			  __PRETTY_FUNCTION__, __LINE__, self.connectedWatch);
 	#endif
 	
 	// set the callback for incoming messages
-	[self.connectedWatch appMessagesAddReceiveUpdateHandler:^BOOL(PBWatch *watch, NSDictionary *update) {
+	[self.connectedWatch appMessagesAddReceiveUpdateHandler:^BOOL(PBWatch *watch,
+																  NSDictionary *update)
+	{
 		[self receiveMessage:update];
 		return YES;
 	}];
@@ -129,15 +147,37 @@
 
 - (void)disconnectFromPebble {
 	[self.connectedWatch closeSession:^{
+		self.connectedWatch = nil;
+		self.watchIsEmpty = YES;
+		self.watchVersion = stla_unknown_version_number;
+		
 		#if DEBUG
-			NSLog(@"AppMessages session closed.");
+			NSLog(@"%s:%d: AppMessages session closed.", __PRETTY_FUNCTION__, __LINE__);
 		#endif
 	}];
 }
 
 - (void)resetWatch {
-	NSDictionary *resetCommand = @{@(RESET_KEY): @(0)};
-	[self sendMessage:resetCommand];
+	// don't send simultaneous reset commands
+	static BOOL _resetInProgress = NO;
+	BOOL *resetInProgress = &_resetInProgress; // needed for the block
+	
+	if (!_resetInProgress) {
+		_resetInProgress = YES;
+		NSDictionary *resetCommand = @{@(RESET_KEY): @(0)};
+		[self sendMessage:resetCommand
+			   completion:^(PBWatch *watch __unused,
+							NSDictionary *update __unused,
+							NSError *error __unused)
+		{
+			*resetInProgress = NO;
+			self.watchIsEmpty = YES;
+			
+			#if DEBUG
+				NSLog(@"%s:%d: Reset command sent to watch.", __PRETTY_FUNCTION__, __LINE__);
+			#endif
+		}];
+	}
 }
 
 - (void)sendStringsToWatch:(NSArray *)words
@@ -156,30 +196,28 @@
 	// divide up the words into blocks
 	[wordManager setTextBlocks:(NSMutableArray *)words];
 	
-	// reset the watch
-	NSDictionary *message = @{[NSNumber numberWithUint32:RESET_KEY]: [NSNumber numberWithUint32:0]};
-	[self sendMessage:message];
+	[self resetWatch];
+	
 	// tell the watch the total number of blocks
-	message = @{[NSNumber numberWithUint32:TOTAL_NUMBER_OF_BLOCKS_KEY]:
-					[NSNumber numberWithUint32:(uint32_t)wordManager.textBlocks.count]};
-	[self sendMessage:message];
+	NSDictionary *message = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY): @(wordManager.textBlocks.count)};
+	[self sendMessage:message completion:nil];
 	// tell the watch the block size
-	message = @{[NSNumber numberWithUint32:TEXT_BLOCK_SIZE_KEY]:
-					[NSNumber numberWithUint32:(uint32_t)wordManager.blockSize]};
-	[self sendMessage:message];
+	message = @{@(TEXT_BLOCK_SIZE_KEY): @(wordManager.blockSize)};
+	[self sendMessage:message completion:nil];
 	
 	// send the first block to the watch
 	[self sendBlockAtIndex:0 completion:^(BOOL success) {
-		if (!success) {
+		if (success) {
+			#if DEBUG
+				NSLog(@"%s:%d: Successfully sent first block to the watch.",
+					  __PRETTY_FUNCTION__, __LINE__);
+			#endif
+			
+			self.watchIsEmpty = NO;
+		} else {
 			NSLog(@"%s:%d: Failed to send the first block to the watch.",
 				  __PRETTY_FUNCTION__, __LINE__);
 		}
-		#if DEBUG
-		else {
-			NSLog(@"%s:%d: Successfully sent first block to the watch.",
-				  __PRETTY_FUNCTION__, __LINE__);
-		}
-		#endif
 		
 		// call our caller's handler
 		if (handler) {
@@ -221,40 +259,28 @@
 }
 
 - (void)sendMessage:(NSDictionary *)message
+		 completion:(void (^)(PBWatch *watch, NSDictionary *update, NSError *error))handler
 {
 	if (!self.connectedWatch) {
 		NSLog(@"%s:%d: Trying to send message with no watch connected.",
 			  __PRETTY_FUNCTION__, __LINE__);
-		return;
 	}
 	
 	// validate the message before sending it
 	message = [self prepareDictionaryForAppMessage:message];
-	if (message) {
-		[self.connectedWatch appMessagesPushUpdate:message onSent:^(PBWatch *watch, NSDictionary *update, NSError *error) {
-			if (error) {
-				NSLog(@"%s:%d: Error sending message to watch: %@",
-					  __PRETTY_FUNCTION__, __LINE__, error);
-			}
-			#if DEBUG
-			else {
-				NSLog(@"%s:%d: Successfully sent message to watch: %@",
-					  __PRETTY_FUNCTION__, __LINE__, update);
-			}
-			#endif
-		}];
-	}
+	
+	[self.connectedWatch appMessagesPushUpdate:message onSent:handler];
 }
 
 - (void)sendBlockAtIndex:(NSUInteger)_blockIndex
 			  completion:(void (^)(BOOL success))handler
 {
 	STLAWordManager *wordManager = [STLAWordManager defaultManager];
-	NSAssert(_blockIndex < wordManager.textBlocks.count, @"block index out of range");
+	NSAssert(_blockIndex < wordManager.textBlocks.count, @"%s:%d: Block index out of range (max %lu, actual %lu)",
+			 __PRETTY_FUNCTION__, __LINE__, (unsigned long)wordManager.textBlocks.count, (unsigned long)_blockIndex);
 	
 	// create copies of the parameters with block scope storage
-	__block NSUInteger blockIndex = _blockIndex; // (ObjC block syntax)-safe index of the (text block) to send
-//	__block void (^_handler)(BOOL success) = handler;
+	NSUInteger const blockIndex = _blockIndex; // (ObjC block syntax)-safe index of the (text block) to send
 	NSArray *__weak textBlock = wordManager.textBlocks[blockIndex];
 	
 	// Create blocks to send to Pebble methods as callbacks.
@@ -271,11 +297,12 @@
 	/// @param error Contains details of the error that occurred, or @c nil if there was no error.
 	__block void (^sendNextWords)(PBWatch *__strong watch, NSDictionary *update, NSError *error);
 	
-	/// Keeps a strong pointer to @c sendNextWords long enough to send it to the Pebble method.
+	/// Keeps a strong pointer to @c sendNextWords just long enough to send it to the Pebble method.
 	void (^strongBlock)(PBWatch *watch, NSDictionary *update, NSError *error);
 	
 	/// Called after the phone finishes launching the watch app.
 	void (^watchAppLaunchedCallback)(PBWatch *watch, NSError *error);
+	
 	/// Called after the phone checks whether AppMessage is supported by the Pebble.
 	void (^appMessagesSupportedCallback)(PBWatch *watch, BOOL appMessagesIsSupported);
 	
@@ -284,8 +311,11 @@
 	
 	__block NSUInteger errorCount = 0; ///< How many errors we've encountered in the course of sending messages so far
 	__block NSUInteger wordNum = 0; ///< The index of the last sent word in the block.
-	NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-	sendNextWords = strongBlock = ^void(PBWatch *watch, NSDictionary *update, NSError *error) {
+	__block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+	sendNextWords = strongBlock = ^void(PBWatch *watch,
+										NSDictionary *update,
+										NSError *error)
+	{
 		if (wordNum >= textBlock.count) {
 			// no words left to send
 			if (handler) {
@@ -297,8 +327,7 @@
 		// check if we're receiving nothing but errors
 		NSUInteger const minErrorsBeforeFailure = 3;
 		if (errorCount >= minErrorsBeforeFailure) {
-			NSLog(@"%s:%d: Too many errors! Aborting send.",
-				  __PRETTY_FUNCTION__, __LINE__);
+			NSLog(@"%s:%d: Too many errors! Aborting send.", __PRETTY_FUNCTION__, __LINE__);
 			if (handler) {
 				handler(NO);
 			}
@@ -311,8 +340,7 @@
 			NSLog(@"%s:%d: Error while sending words: %@. Retrying send.",
 				  __PRETTY_FUNCTION__, __LINE__, error);
 			errorCount++;
-			[self.connectedWatch appMessagesPushUpdate:dict
-												onSent:sendNextWords];
+			[self sendMessage:dict completion:sendNextWords];
 		} else {
 			// no error found, send a new dictionary
 			// create the dictionary of words to send
@@ -321,7 +349,7 @@
 															  fromWordAtIndex:wordNum];
 			if (!words) { // safety check
 				#if DEBUG
-					NSLog(@"%s:%d: Either no words left to send or an error occurred.",
+					NSLog(@"%s:%d: An error occurred while retrieving the next words to send.",
 						  __PRETTY_FUNCTION__, __LINE__);
 				#endif
 				if (handler) {
@@ -329,59 +357,50 @@
 				}
 				return;
 			}
-			NSNumber *dictKey = [NSNumber numberWithUint32:APPMESG_BLOCK_NUMBER_KEY];
-			dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)blockIndex];
-			dictKey = [NSNumber numberWithUint32:APPMESG_WORD_START_INDEX_KEY];
-			dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)wordNum];
-			dictKey = [NSNumber numberWithUint32:APPMESG_NUM_WORDS_KEY];
-			dict[dictKey] = [NSNumber numberWithUint32:(uint32_t)words.count];
-			dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD_KEY];
-			dict[dictKey] = [NSNumber numberWithUint32:APPMESG_FIRST_WORD];
 			
+			// base dictionary
+			dict = [NSMutableDictionary dictionaryWithDictionary:@{@(APPMESG_BLOCK_NUMBER_KEY):		@(blockIndex),
+																   @(APPMESG_WORD_START_INDEX_KEY):	@(wordNum),
+																   @(APPMESG_NUM_WORDS_KEY):		@(words.count),
+																   @(APPMESG_FIRST_WORD_KEY):		@(APPMESG_FIRST_WORD)}];
 			// add the words to the dictionary
-			for (uint32_t i = 0; i < words.count; i++) {
-				dictKey = [NSNumber numberWithUint32:APPMESG_FIRST_WORD + i];
-				dict[dictKey] = words[i];
+			for (NSUInteger i = 0; i < words.count; i++) {
+				dict[@(APPMESG_FIRST_WORD + i)] = words[i];
 			}
 			
 			#if DEBUG
 				// log the size of the dictionary we're trying to send
 				NSData *data = [dict pebbleDictionaryData:nil];
 				NSLog(@"%s:%d: sending dictionary of size %lu",
-					  __PRETTY_FUNCTION__, __LINE__, data.length);
+					  __PRETTY_FUNCTION__, __LINE__, (unsigned long)data.length);
 			#endif
 			
 			// send the dictionary
-			[self.connectedWatch appMessagesPushUpdate:dict
-												onSent:sendNextWords];
+			[self sendMessage:dict completion:sendNextWords];
+			
 			// update wordNum
 			wordNum += words.count;
 		}
 	};
 	
-	watchAppLaunchedCallback = ^void(PBWatch *watch, NSError *error) {
+	watchAppLaunchedCallback = ^void(PBWatch *watch, NSError *error)
+	{
 		if (error) {
-			NSLog(@"%s: Error launching watch app: %@",
-				  __PRETTY_FUNCTION__, error);
+			NSLog(@"%s:%d: Error launching watch app: %@", __PRETTY_FUNCTION__, __LINE__, error);
 			if (handler) {
 				handler(NO);
 			}
 			return;
 		}
 		
-		// wait for the watch app to finish launching
-		usleep(1000); // 1 ms
-		
 		// send the strings to the watch
-		
-		
-		// actually run the block
-		[self.connectedWatch appMessagesPushUpdate:dict onSent:sendNextWords];
+		sendNextWords(watch, dict, nil);
 	};
 	
-	appMessagesSupportedCallback = ^void(PBWatch *watch, BOOL isAppMessagesSupported) {
+	appMessagesSupportedCallback = ^void(PBWatch *watch, BOOL isAppMessagesSupported)
+	{
 		if (!isAppMessagesSupported) {
-			NSLog(@"%s: App messages not supported!", __PRETTY_FUNCTION__);
+			NSLog(@"%s:%d: App messages not supported!", __PRETTY_FUNCTION__, __LINE__);
 			if (handler) {
 				handler(NO);
 			}
@@ -397,30 +416,30 @@
 	
 	// check whether we're connected to a watch
 	if (!self.connectedWatch) {
-		NSLog(@"%s: No connected watch.", __PRETTY_FUNCTION__);
+		NSLog(@"%s:%d: No connected watch.", __PRETTY_FUNCTION__, __LINE__);
 		if (handler) {
 			handler(NO);
 		}
 		return;
-	} else if (!textBlock) {
+	}
+	if (!textBlock) {
 		#if DEBUG
-			NSLog(@"%s: No block to send. Reporting success.", __PRETTY_FUNCTION__);
+			NSLog(@"%s:%d: Error: no block to send.", __PRETTY_FUNCTION__, __LINE__);
 		#endif
 		if (handler) {
-			handler(YES);
+			handler(NO);
 		}
 		return;
-	} else {
-		// a watch is connected
-		[self.connectedWatch appMessagesGetIsSupported:appMessagesSupportedCallback];
 	}
+	// a watch is connected
+	[self.connectedWatch appMessagesGetIsSupported:appMessagesSupportedCallback];
 }
 
 #pragma mark Receiving messages
 
 - (void)receiveMessage:(NSDictionary *)message {
 	#if DEBUG
-		NSLog(@"Received message: %@", message);
+		NSLog(@"%s:%d: Received message: %@", __PRETTY_FUNCTION__, __LINE__, message);
 	#endif
 	
 	id value;
@@ -432,7 +451,7 @@
 			NSString *errorMessage = (NSString *)value;
 			[self receiveError:errorMessage];
 		} else {
-			NSLog(@"%s: Received non-string error.", __PRETTY_FUNCTION__);
+			NSLog(@"%s:%d: Received non-string error.", __PRETTY_FUNCTION__, __LINE__);
 		}
 		return;
 	}
@@ -444,7 +463,7 @@
 			NSString *versionString = (NSString *)value;
 			[self receiveVersionNumber:versionString];
 		} else {
-			NSLog(@"%s: Received non-string version number.", __PRETTY_FUNCTION__);
+			NSLog(@"%s:%d: Received non-string version number.", __PRETTY_FUNCTION__, __LINE__);
 		}
 		return;
 	}
@@ -456,8 +475,8 @@
 			NSNumber *blockSize = (NSNumber *)value;
 			[self receiveBlockSize:blockSize];
 		} else {
-			NSLog(@"%s: Received block size update of type %@ (expected NSNumber).",
-				  __PRETTY_FUNCTION__, [value class]);
+			NSLog(@"%s:%d: Received block size update of type %@ (expected NSNumber).",
+				  __PRETTY_FUNCTION__, __LINE__, [value class]);
 		}
 		return;
 	}
@@ -469,16 +488,28 @@
 			NSNumber *numBlocks = (NSNumber *)value;
 			[self receiveBlockCount:numBlocks];
 		} else {
-			NSLog(@"%s: Received block size update of type %@ (expected NSNumber).",
-				  __PRETTY_FUNCTION__, [value class]);
+			NSLog(@"%s:%d: Received query (for the total number of blocks) of type %@ (expected NSNumber).",
+				  __PRETTY_FUNCTION__, __LINE__, [value class]);
+		}
+		return;
+	}
+	
+	// check for a request for another block to be sent over
+	value = message[@(APPMESG_BLOCK_NUMBER_KEY)];
+	if (value) {
+		if ([value isKindOfClass:[NSNumber class]]) {
+			NSNumber *requestedBlock = (NSNumber *)value;
+			[self receiveBlockRequest:requestedBlock];
+		} else {
+			NSLog(@"%s:%d: Received request (to send a block) of type %@ (expected NSNumber).",
+				  __PRETTY_FUNCTION__, __LINE__, [value class]);
 		}
 		return;
 	}
 	
 	// no valid keys found, now we just get info for debugging
-	NSLog(@"%s: No valid keys found! All received keys: %@",
-		  __PRETTY_FUNCTION__, message.allKeys);
-	return;
+	NSLog(@"%s:%d: No valid keys found! All received keys: %@",
+		  __PRETTY_FUNCTION__, __LINE__, message.allKeys);
 }
 
 #pragma mark Helpers for receiving messages
@@ -489,17 +520,27 @@
 	// send a message containing the total number of blocks back to the watch
 	NSDictionary *blockCountMessage = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY):
 											@(-wordManager.textBlocks.count)};
-	[self sendMessage:blockCountMessage];
+	[self sendMessage:blockCountMessage completion:nil];
 	
 	#if DEBUG
-		NSLog(@"Replied to block count query.");
+		NSLog(@"%s:%d: Replied to block count query.", __PRETTY_FUNCTION__, __LINE__);
+	#endif
+}
+
+- (void)receiveBlockRequest:(NSNumber *)requestedBlockIndex {
+	NSUInteger blockIndex = [requestedBlockIndex unsignedIntegerValue];
+	[self sendBlockAtIndex:blockIndex completion:nil];
+	
+	#if DEBUG
+		NSLog(@"%s:%d: Received request for block %lu.",
+			  __PRETTY_FUNCTION__, __LINE__, (unsigned long)blockIndex);
 	#endif
 }
 
 - (void)receiveBlockSize:(NSNumber *)blockSize {
 	NSInteger size = [blockSize integerValue];
 	STLAWordManager *wordManager = [STLAWordManager defaultManager];
-	// if the new number is a valid value, set the max block size
+	// if the new number is positive, set the max block size
 	if (size > 0) {
 		// re-blockify the existing blocks
 		wordManager.blockSize = size;
@@ -509,15 +550,16 @@
 	// send a message containing the max block size back to the watch
 	NSDictionary *blockSizeMessage = @{@(TEXT_BLOCK_SIZE_KEY):
 										   @(-wordManager.blockSize)};
-	[self sendMessage:blockSizeMessage];
+	[self sendMessage:blockSizeMessage completion:nil];
 	
 	#if DEBUG
-		NSLog(@"Replied to block size query.");
+		NSLog(@"%s:%d: Replied to block size query.", __PRETTY_FUNCTION__, __LINE__);
 	#endif
 }
 
 - (void)receiveError:(NSString *)errorMessage {
-	NSLog(@"Received error message from watch: %@", errorMessage);
+	NSLog(@"%s:%d: Received error message from watch: %@",
+		  __PRETTY_FUNCTION__, __LINE__, errorMessage);
 }
 
 - (void)receiveVersionNumber:(NSString *)version {
@@ -527,7 +569,8 @@
 	}
 	
 	#if DEBUG
-		NSLog(@"Received version number %@ from watch.", version);
+		NSLog(@"%s:%d: Received version number %@ from watch.",
+			  __PRETTY_FUNCTION__, __LINE__, version);
 	#endif
 }
 
@@ -538,9 +581,11 @@
 				isNew:(BOOL)isNew
 {
 	#if DEBUG
-		NSLog(@"Pebble connected: %@", watch.name);
+		NSLog(@"%s:%d: Pebble connected: %@", __PRETTY_FUNCTION__, __LINE__, watch.name);
 	#endif
+	
 	self.connectedWatch = watch;
+	
 	// push out a notification to reflect the new connection status
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	[nc postNotificationName:STLAWatchConnectionStateChangeNotification
@@ -550,21 +595,25 @@
 	// send a request to the watch to send its version number over
 	NSString *verStr = stla_version_to_string(stla_unknown_version_number);
 	NSDictionary *versionDict = @{@(STELA_VERSION_KEY): verStr};
-	[self sendMessage:versionDict];
-	
-	// send our version number to the watch
-	verStr = stla_version_to_string(stla_get_iOS_Stela_version());
-	versionDict = @{@(STELA_VERSION_KEY): verStr};
-	[self sendMessage:versionDict];
+	[self sendMessage:versionDict completion:^(PBWatch *watch __unused,
+											   NSDictionary *update __unused,
+											   NSError *error __unused) {
+		// send our version number to the watch
+		NSString *ourVerStr = stla_version_to_string(stla_get_iOS_Stela_version());
+		NSDictionary *ourVersionDict = @{@(STELA_VERSION_KEY): ourVerStr};
+		[self sendMessage:ourVersionDict completion:nil];
+	}];
 }
 
 - (void)pebbleCentral:(PBPebbleCentral *)central
    watchDidDisconnect:(PBWatch *)watch
 {
 	#if DEBUG
-		NSLog(@"Pebble disconnected: %@", watch.name);
+		NSLog(@"%s:%d: Pebble disconnected: %@", __PRETTY_FUNCTION__, __LINE__, watch.name);
 	#endif
+	
 	if (self.connectedWatch == watch || [watch isEqual:self.connectedWatch]) {
+		[self disconnectFromPebble];
 		self.connectedWatch = nil;
 		// push out a notification to reflect the new connection status
 		NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
@@ -572,9 +621,28 @@
 						  object:watch
 						userInfo:@{kWatchConnectionStateChangeNotificationBoolKey: @(NO)}];
 	}
-	
-	// reset the version number we have on file for the watch
-	self.watchVersion = stla_unknown_version_number;
+}
+
+#pragma mark - Pebble watch delegate
+
+- (void)watchDidDisconnect:(PBWatch *)watch {
+	NSLog(@"%s:%d: The Pebble disconnected.", __PRETTY_FUNCTION__, __LINE__);
+}
+
+- (void)watch:(PBWatch *)watch handleError:(NSError *)error {
+	NSLog(@"%s:%d: The Pebble caught an error: %@", __PRETTY_FUNCTION__, __LINE__, error);
+}
+
+- (void)watchWillResetSession:(PBWatch *)watch {
+	NSLog(@"%s:%d: The Pebble's internal EASession will be reset.", __PRETTY_FUNCTION__, __LINE__);
+}
+
+- (void)watchDidOpenSession:(PBWatch *)watch {
+	NSLog(@"%s:%d: The Pebble's internal EASession was opened.", __PRETTY_FUNCTION__, __LINE__);
+}
+
+- (void)watchDidCloseSession:(PBWatch *)watch {
+	NSLog(@"%s:%d: The Pebble's internal EASession was closed.", __PRETTY_FUNCTION__, __LINE__);
 }
 
 @end

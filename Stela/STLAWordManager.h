@@ -12,6 +12,8 @@
 @interface STLAWordManager : NSObject
 
 /// The singleton word manager.
+///
+/// @return The singleton word manager.
 + (STLAWordManager *)defaultManager;
 
 
