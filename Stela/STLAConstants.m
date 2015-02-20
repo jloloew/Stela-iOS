@@ -14,7 +14,7 @@
 
 /// The patch field of the current version of the iOS app.
 /// The major and minor are obtained programmatically from the app's @c Info.plist.
-static unsigned char const CURRENT_PATCH_VERSION = 1;
+static unsigned char const CURRENT_PATCH_VERSION = 2;
 
 NSString * const API_KEY = @"f6687a0711a74306ac45cb89c08b026fe0cd03d6";
 NSString * const API_URL = @"http://access.alchemyapi.com/calls/url/URLGetText";

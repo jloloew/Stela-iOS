@@ -22,7 +22,7 @@
 @property Version watchVersion;
 
 /// Perform initialization specific to the Pebble watch.
-- (void)setUpPebble;
+- (void)configurePebbleCentral;
 
 /// Validate a dictionary in preparation for sending it via AppMessage.
 /// Keys must be NSNumbers and values must be NSNumber, NSString, or NSData.
@@ -46,6 +46,18 @@
 /// @param message The key-value pair or pairs to send.
 /// @param handler The callback to run when the message is done sending.
 - (void)sendMessage:(NSDictionary *)message
+		 completion:(void (^)(PBWatch *watch, NSDictionary *update, NSError *error))handler;
+
+/// Send the iOS app's current version to the watch.
+///
+/// @param handler The callback to run when the message is done sending.
+- (void)sendVersionWithCompletion:(void (^)(PBWatch *watch, NSDictionary *update, NSError *error))handler;
+
+/// Send the given version to the watch.
+///
+/// @param version The version to send.
+/// @param handler The callback to run when the message is done sending.
+- (void)sendVersion:(Version)version
 		 completion:(void (^)(PBWatch *watch, NSDictionary *update, NSError *error))handler;
 
 /// Handle a new message from the watch. This method is a sort of router for messages.
@@ -77,8 +89,12 @@
 
 /// Handle a received version number.
 ///
-/// @param version The version string.
-- (void)receiveVersionNumber:(NSString *)version;
+/// @param major The major component of the version.
+/// @param minor The minor component of the version.
+/// @param patch The patch component of the version.
+- (void)receiveVersionNumberMajor:(NSNumber *)major
+							minor:(NSNumber *)minor
+							patch:(NSNumber *)patch;
 
 #pragma mark Pebble Central delegate
 
@@ -94,7 +110,7 @@
 @end
 
 
-#pragma mark -
+#pragma mark - Implementation
 @implementation STLAMessenger
 
 + (STLAMessenger *)defaultMessenger {
@@ -107,14 +123,13 @@
 
 - (instancetype)init {
 	if (self = [super init]) {
-		self.watchIsEmpty = YES;
-		self.watchVersion = (Version) { 0, 255, 255 };
-		[self setUpPebble];
+		self.connectedWatch = nil;
+		[self configurePebbleCentral];
 	}
 	return self;
 }
 
-- (void)setUpPebble {
+- (void)configurePebbleCentral {
 	PBPebbleCentral *pebbleCentral = [PBPebbleCentral defaultCentral];
 	
 	pebbleCentral.delegate = self;
@@ -129,8 +144,13 @@
 		NSLog(@"%s:%d: Our app UDID is invalid!", __PRETTY_FUNCTION__, __LINE__);
 	}
 	
+	// set our connected watch
+	if (pebbleCentral.lastConnectedWatch.isConnected) {
+		self.connectedWatch = pebbleCentral.lastConnectedWatch;
+	} else {
+		self.connectedWatch = nil;
+	}
 	
-	self.connectedWatch = pebbleCentral.lastConnectedWatch.isConnected ? pebbleCentral.lastConnectedWatch : nil;
 	#if DEBUG
 		NSLog(@"%s:%d: Last connected watch: %@",
 			  __PRETTY_FUNCTION__, __LINE__, self.connectedWatch);
@@ -147,13 +167,20 @@
 
 - (void)disconnectFromPebble {
 	[self.connectedWatch closeSession:^{
-		self.connectedWatch = nil;
-		self.watchIsEmpty = YES;
-		self.watchVersion = stla_unknown_version_number;
-		
 		#if DEBUG
 			NSLog(@"%s:%d: AppMessages session closed.", __PRETTY_FUNCTION__, __LINE__);
 		#endif
+		
+		self.watchIsEmpty = YES;
+		self.watchVersion = stla_unknown_version_number;
+		
+		// push out a notification to reflect the new connection status
+		NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+		[nc postNotificationName:STLAWatchConnectionStateChangeNotification
+						  object:self.connectedWatch
+						userInfo:@{kWatchConnectionStateChangeNotificationBoolKey: @(NO)}];
+		
+		self.connectedWatch = nil;
 	}];
 }
 
@@ -198,11 +225,9 @@
 	
 	[self resetWatch];
 	
-	// tell the watch the total number of blocks
-	NSDictionary *message = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY): @(wordManager.textBlocks.count)};
-	[self sendMessage:message completion:nil];
-	// tell the watch the block size
-	message = @{@(TEXT_BLOCK_SIZE_KEY): @(wordManager.blockSize)};
+	// tell the watch the total number of blocks and the block size
+	NSDictionary *message = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY): @(wordManager.textBlocks.count),
+							  @(TEXT_BLOCK_SIZE_KEY): @(wordManager.blockSize)};
 	[self sendMessage:message completion:nil];
 	
 	// send the first block to the watch
@@ -267,9 +292,12 @@
 	}
 	
 	// validate the message before sending it
-	message = [self prepareDictionaryForAppMessage:message];
+//	message = [self prepareDictionaryForAppMessage:message];
 	
-	[self.connectedWatch appMessagesPushUpdate:message onSent:handler];
+	// communication with the watch must be done on the main thread
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self.connectedWatch appMessagesPushUpdate:message onSent:handler];
+	});
 }
 
 - (void)sendBlockAtIndex:(NSUInteger)_blockIndex
@@ -309,6 +337,7 @@
 	#pragma clang diagnostic pop
 	
 	
+	__block NSUInteger messagesSent = 0; ///< How many messages we've sent successfully.
 	__block NSUInteger errorCount = 0; ///< How many errors we've encountered in the course of sending messages so far
 	__block NSUInteger wordNum = 0; ///< The index of the last sent word in the block.
 	__block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
@@ -316,9 +345,6 @@
 										NSDictionary *update,
 										NSError *error)
 	{
-		// add a small delay to let the watch catch up
-		usleep(100);
-		
 		if (wordNum >= textBlock.count) {
 			// no words left to send
 			if (handler) {
@@ -328,8 +354,9 @@
 		}
 		
 		// check if we're receiving nothing but errors
-		NSUInteger const minErrorsBeforeFailure = 3;
-		if (errorCount >= minErrorsBeforeFailure) {
+		NSUInteger const minErrorsBeforeFailure = 10;
+		double const maxErrorRate = 0.25;
+		if (errorCount >= minErrorsBeforeFailure && (1.0 * errorCount / messagesSent) > maxErrorRate) {
 			NSLog(@"%s:%d: Too many errors! Aborting send.", __PRETTY_FUNCTION__, __LINE__);
 			if (handler) {
 				handler(NO);
@@ -346,6 +373,7 @@
 			[self sendMessage:dict completion:sendNextWords];
 		} else {
 			// no error found, send a new dictionary
+			messagesSent++;
 			// create the dictionary of words to send
 			NSArray *words = [[STLAWordManager defaultManager] getWordsOfSize:kPebbleMaxMessageSize
 															 fromBlockAtIndex:blockIndex
@@ -374,8 +402,8 @@
 			#if DEBUG
 				// log the size of the dictionary we're trying to send
 				NSData *data = [dict pebbleDictionaryData:nil];
-				NSLog(@"%s:%d: sending dictionary of size %lu",
-					  __PRETTY_FUNCTION__, __LINE__, (unsigned long)data.length);
+				NSLog(@"%s:%d: sending message %lu containing a dictionary with size %lu and contents: %@",
+					  __PRETTY_FUNCTION__, __LINE__, (unsigned long)messagesSent, (unsigned long)data.length, dict);
 			#endif
 			
 			// send the dictionary
@@ -438,6 +466,21 @@
 	[self.connectedWatch appMessagesGetIsSupported:appMessagesSupportedCallback];
 }
 
+- (void)sendVersionWithCompletion:(void (^)(PBWatch *watch, NSDictionary *update, NSError *error))handler
+{
+	Version const ver = stla_get_iOS_Stela_version();
+	[self sendVersion:ver completion:handler];
+}
+
+- (void)sendVersion:(Version)version
+		 completion:(void (^)(PBWatch *watch, NSDictionary *update, NSError *error))handler
+{
+	NSDictionary *message = @{@(VERSION_MAJOR_KEY): [NSNumber numberWithUint8:version.major],
+							  @(VERSION_MINOR_KEY): [NSNumber numberWithUint8:version.minor],
+							  @(VERSION_PATCH_KEY): [NSNumber numberWithUint8:version.patch]};
+	[self sendMessage:message completion:handler];
+}
+
 #pragma mark Receiving messages
 
 - (void)receiveMessage:(NSDictionary *)message {
@@ -460,13 +503,17 @@
 	}
 	
 	// check for a version number
-	value = message[@(STELA_VERSION_KEY)];
+	value = message[@(VERSION_MAJOR_KEY)];
 	if (value) {
-		if ([value isKindOfClass:[NSString class]]) {
-			NSString *versionString = (NSString *)value;
-			[self receiveVersionNumber:versionString];
+		if ([message[@(VERSION_MAJOR_KEY)] isKindOfClass:[NSNumber class]] &&
+			[message[@(VERSION_MINOR_KEY)] isKindOfClass:[NSNumber class]] &&
+			[message[@(VERSION_PATCH_KEY)] isKindOfClass:[NSNumber class]]) {
+			NSNumber *major = (NSNumber *)message[@(VERSION_MAJOR_KEY)];
+			NSNumber *minor = (NSNumber *)message[@(VERSION_MINOR_KEY)];
+			NSNumber *patch = (NSNumber *)message[@(VERSION_PATCH_KEY)];
+			[self receiveVersionNumberMajor:major minor:minor patch:patch];
 		} else {
-			NSLog(@"%s:%d: Received non-string version number.", __PRETTY_FUNCTION__, __LINE__);
+			NSLog(@"%s:%d: Received invalid version number.", __PRETTY_FUNCTION__, __LINE__);
 		}
 		return;
 	}
@@ -565,15 +612,20 @@
 		  __PRETTY_FUNCTION__, __LINE__, errorMessage);
 }
 
-- (void)receiveVersionNumber:(NSString *)version {
-	Version ver = stla_string_to_version(version);
-	if (!stla_version_is_unknown(ver)) { // don't set the watch's version number without a valid value
-		self.watchVersion = ver;
-	}
+- (void)receiveVersionNumberMajor:(NSNumber *)major
+							minor:(NSNumber *)minor
+							patch:(NSNumber *)patch
+{
+	VERSION_MAJOR_KEY_t v_major = [major uint8Value];
+	VERSION_MINOR_KEY_t v_minor = [minor uint8Value];
+	VERSION_PATCH_KEY_t v_patch = [patch uint8Value];
+	Version const ver = { .major = v_major, .minor = v_minor, .patch = v_patch };
+	
+	self.watchVersion = ver;
 	
 	#if DEBUG
 		NSLog(@"%s:%d: Received version number %@ from watch.",
-			  __PRETTY_FUNCTION__, __LINE__, version);
+			  __PRETTY_FUNCTION__, __LINE__, stla_version_to_string(ver));
 	#endif
 }
 
@@ -589,23 +641,38 @@
 	
 	self.connectedWatch = watch;
 	
-	// push out a notification to reflect the new connection status
-	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-	[nc postNotificationName:STLAWatchConnectionStateChangeNotification
-					  object:watch
-					userInfo:@{kWatchConnectionStateChangeNotificationBoolKey: @(YES)}];
+	// declare a block here to minimize nesting
+	void (^appMessagesSupportedCallback)(PBWatch *watch, BOOL isAppMessagesSupported);
+	appMessagesSupportedCallback = ^(PBWatch *watch, BOOL isAppMessagesSupported) {
+		if (isAppMessagesSupported) {
+			// send our version number to the watch
+			[self sendVersionWithCompletion:^(PBWatch *__unused watch,
+											  NSDictionary *__unused update,
+											  NSError *__unused error) {
+				// send a request to the watch to send its version number over
+				[self sendVersion:stla_unknown_version_number
+					   completion:^(PBWatch *watch,
+									NSDictionary *__unused update,
+									NSError *__unused error)
+				 {
+					 // push out a notification to reflect the new connection status
+					 NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+					 [nc postNotificationName:STLAWatchConnectionStateChangeNotification
+									   object:watch
+									 userInfo:@{kWatchConnectionStateChangeNotificationBoolKey: @(YES)}];
+				 }];
+			}];
+		} else {
+			NSLog(@"Newly connected Pebble doesn't support AppMessage!");
+			[self disconnectFromPebble];
+		}
+	};
 	
-	// send a request to the watch to send its version number over
-	NSString *verStr = stla_version_to_string(stla_unknown_version_number);
-	NSDictionary *versionDict = @{@(STELA_VERSION_KEY): verStr};
-	[self sendMessage:versionDict completion:^(PBWatch *watch __unused,
-											   NSDictionary *update __unused,
-											   NSError *error __unused) {
-		// send our version number to the watch
-		NSString *ourVerStr = stla_version_to_string(stla_get_iOS_Stela_version());
-		NSDictionary *ourVersionDict = @{@(STELA_VERSION_KEY): ourVerStr};
-		[self sendMessage:ourVersionDict completion:nil];
-	}];
+	// query the watch for version and compatibility info
+	// these calls must be done on the main thread
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[watch appMessagesGetIsSupported:appMessagesSupportedCallback];
+	});
 }
 
 - (void)pebbleCentral:(PBPebbleCentral *)central
@@ -618,18 +685,15 @@
 	if (self.connectedWatch == watch || [watch isEqual:self.connectedWatch]) {
 		[self disconnectFromPebble];
 		self.connectedWatch = nil;
-		// push out a notification to reflect the new connection status
-		NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-		[nc postNotificationName:STLAWatchConnectionStateChangeNotification
-						  object:watch
-						userInfo:@{kWatchConnectionStateChangeNotificationBoolKey: @(NO)}];
 	}
 }
 
 #pragma mark - Pebble watch delegate
 
 - (void)watchDidDisconnect:(PBWatch *)watch {
-	NSLog(@"%s:%d: The Pebble disconnected.", __PRETTY_FUNCTION__, __LINE__);
+	#if DEBUG
+		NSLog(@"%s:%d: The Pebble disconnected.", __PRETTY_FUNCTION__, __LINE__);
+	#endif
 }
 
 - (void)watch:(PBWatch *)watch handleError:(NSError *)error {
@@ -637,15 +701,21 @@
 }
 
 - (void)watchWillResetSession:(PBWatch *)watch {
-	NSLog(@"%s:%d: The Pebble's internal EASession will be reset.", __PRETTY_FUNCTION__, __LINE__);
+	#if DEBUG
+		NSLog(@"%s:%d: The Pebble's internal EASession will be reset.", __PRETTY_FUNCTION__, __LINE__);
+	#endif
 }
 
 - (void)watchDidOpenSession:(PBWatch *)watch {
-	NSLog(@"%s:%d: The Pebble's internal EASession was opened.", __PRETTY_FUNCTION__, __LINE__);
+	#if DEBUG
+		NSLog(@"%s:%d: The Pebble's internal EASession was opened.", __PRETTY_FUNCTION__, __LINE__);
+	#endif
 }
 
 - (void)watchDidCloseSession:(PBWatch *)watch {
-	NSLog(@"%s:%d: The Pebble's internal EASession was closed.", __PRETTY_FUNCTION__, __LINE__);
+	#if DEBUG
+		NSLog(@"%s:%d: The Pebble's internal EASession was closed.", __PRETTY_FUNCTION__, __LINE__);
+	#endif
 }
 
 @end

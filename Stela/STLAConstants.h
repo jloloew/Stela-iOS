@@ -41,49 +41,67 @@ typedef NS_ENUM(uint32_t, AppMessageKey) {
 	/// For reporting an error, as a string.
 	ERROR_KEY = 0,
 	
-	/// For sending the version of Stela as a string. E.g., "255.255.255"
-	/// To query the value, send a version beginning with a zero ("0.x.x").
-	STELA_VERSION_KEY = 1,
-	
 	/// Reset command.
 	/// Sent by the phone when a new article will be sent.
 	/// Never sent by the watch.
-	RESET_KEY = 2,
+	RESET_KEY = 1,
 	
 	/// Sent by the phone to set the maximum number of words in each block.
 	/// Sent by the watch to query the maximum block size.
-	TEXT_BLOCK_SIZE_KEY = 3,
+	TEXT_BLOCK_SIZE_KEY = 2,
 	
 	/// Sent by the phone to convey the number of blocks in the entire article.
 	/// Sent by the watch to query the block count.
-	TOTAL_NUMBER_OF_BLOCKS_KEY = 4,
+	TOTAL_NUMBER_OF_BLOCKS_KEY = 3,
 	
 	/// The number of words contained in just the current message.
 	/// Sent by the phone, in the same message as an array of strings.
 	/// Never sent by the watch.
-	APPMESG_NUM_WORDS_KEY = 5,
+	APPMESG_NUM_WORDS_KEY = 4,
 	
 	/// Used to send the index of the first word within the text block.
 	/// In other words, it's where in the block to insert the words in this message.
 	/// Sent by the phone, in the same message as an array of strings.
 	/// Never sent by the watch.
-	APPMESG_WORD_START_INDEX_KEY = 6,
+	APPMESG_WORD_START_INDEX_KEY = 5,
 	
 	/// Holds the index of the block that the words in the current message belong in.
 	/// Sent by the phone, in the same message as an array of strings.
 	/// Sent on its own by the watch to request a block be sent over from the phone.
-	APPMESG_BLOCK_NUMBER_KEY = 7,
+	APPMESG_BLOCK_NUMBER_KEY = 6,
 	
 	/// Used to send the dictionary key of the first word within this message.
 	/// Sent by the phone, in the same message as an array of strings.
 	/// Never sent by the watch.
-	APPMESG_FIRST_WORD_KEY = 8,
+	APPMESG_FIRST_WORD_KEY = 7,
 	
-	/// The value stored for this key is the first word.
+	/// For sending the version of Stela.
+	VERSION_MAJOR_KEY = 8,
+	
+	/// For sending the version of Stela.
+	VERSION_MINOR_KEY = 9,
+	
+	/// For sending the version of Stela.
+	VERSION_PATCH_KEY = 10,
+	
+	/// The value stored for this key in the dict of this message is the first word.
 	/// Subsequent words should be stored for increasing keys from this key.
 	/// This value is always APPMESG_FIRST_WORD_KEY + 1.
-	APPMESG_FIRST_WORD = 9
+	APPMESG_FIRST_WORD = 11
 };
+
+typedef uint8_t		ERROR_KEY_t;
+typedef uint8_t		RESET_KEY_t;
+typedef int16_t		TEXT_BLOCK_SIZE_KEY_t;
+typedef int16_t		TOTAL_NUMBER_OF_BLOCKS_KEY_t;
+typedef uint8_t		APPMESG_NUM_WORDS_KEY_t;
+typedef uint16_t	APPMESG_WORD_START_INDEX_KEY_t;
+typedef int16_t		APPMESG_BLOCK_NUMBER_KEY_t;
+typedef uint32_t	APPMESG_FIRST_WORD_KEY_t;
+typedef uint8_t		VERSION_MAJOR_KEY_t;
+typedef uint8_t		VERSION_MINOR_KEY_t;
+typedef uint8_t		VERSION_PATCH_KEY_t;
+typedef uint32_t	APPMESG_FIRST_WORD_t;
 
 /// Used for sending version numbers to and from the watch. Ex.: "1.0.31"
 typedef struct {
