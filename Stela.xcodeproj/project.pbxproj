@@ -163,20 +163,20 @@
 			isa = PBXGroup;
 			children = (
 				B81DA2BB18F8C61800C49C21 /* AppDelegate.h */,
+				B86E1B2A18F8C84800FAD644 /* STLABrowserVC.h */,
+				B8CF7E3C1A5BAB9800190FA7 /* STLAConstants.h */,
+				B8B0C4611A7C316700EDE404 /* STLAMessenger.h */,
+				B8B0C4641A7C448100EDE404 /* STLAWordManager.h */,
+				B81DA2C418F8C61800C49C21 /* ViewController.h */,
 				B81DA2BC18F8C61800C49C21 /* AppDelegate.m */,
+				B86E1B2B18F8C84800FAD644 /* STLABrowserVC.m */,
+				B8B0C4671A7C945800EDE404 /* STLAConstants.m */,
+				B8B0C4621A7C316700EDE404 /* STLAMessenger.m */,
+				B8B0C4651A7C448100EDE404 /* STLAWordManager.m */,
+				B81DA2C518F8C61800C49C21 /* ViewController.m */,
 				B81DA2C718F8C61800C49C21 /* Images.xcassets */,
 				B81DA2BE18F8C61800C49C21 /* Main_iPhone.storyboard */,
-				B86E1B2A18F8C84800FAD644 /* STLABrowserVC.h */,
-				B86E1B2B18F8C84800FAD644 /* STLABrowserVC.m */,
-				B8CF7E3C1A5BAB9800190FA7 /* STLAConstants.h */,
-				B8B0C4671A7C945800EDE404 /* STLAConstants.m */,
-				B8B0C4611A7C316700EDE404 /* STLAMessenger.h */,
-				B8B0C4621A7C316700EDE404 /* STLAMessenger.m */,
-				B8B0C4641A7C448100EDE404 /* STLAWordManager.h */,
-				B8B0C4651A7C448100EDE404 /* STLAWordManager.m */,
 				B81DA2B318F8C61800C49C21 /* Supporting Files */,
-				B81DA2C418F8C61800C49C21 /* ViewController.h */,
-				B81DA2C518F8C61800C49C21 /* ViewController.m */,
 			);
 			path = Stela;
 			sourceTree = "<group>";
