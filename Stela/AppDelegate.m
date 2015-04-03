@@ -62,11 +62,6 @@ static NSString *SAVED_URL_KEY = @"savedURL";
     return YES;
 }
 
-- (void)applicationDidEnterBackground:(UIApplication *)application {
-	// close the session so other apps can use Pebble too
-	[[STLAMessenger defaultMessenger] disconnectFromPebble];
-}
-
 
 #pragma mark URL stuff
 

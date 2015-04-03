@@ -16,8 +16,7 @@
 #import "STLABrowserVC.h"
 
 
-__unused
-static const CGFloat kNavBarHeight = 52.0f;
+__unused static const CGFloat kNavBarHeight = 52.0f;
 static const CGFloat kLabelHeight = 14.0f;
 static const CGFloat kMargin = 10.0f;
 static const CGFloat kSpacer = 2.0f;
