@@ -16,12 +16,22 @@ private let sharedWordsFileName = "sharedWords"
 class InterfaceController: WKInterfaceController {
 
 	@IBOutlet weak var pauseImage: WKInterfaceImage!
-	@IBOutlet weak var currWord: WKInterfaceLabel!
+	@IBOutlet weak var currWord: WKInterfaceButton!
 	@IBOutlet weak var infoText: WKInterfaceLabel!
 	
 	
 	var wordManager: WordManager!
 	
+	var rewinding = false {
+		didSet {
+			setPlayPauseIcon()
+		}
+	}
+	var paused = false {
+		didSet {
+			setPlayPauseIcon()
+		}
+	}
 	private var shouldPause = false
 	
 	// MARK: - Lifecycle
@@ -30,6 +40,9 @@ class InterfaceController: WKInterfaceController {
         super.awakeWithContext(context)
         
         // Configure interface objects here.
+		// the pause icon is just to make storyboarding easier, it should be clear by default
+		pauseImage.setImageNamed(nil)
+		// TODO: Long words in currWord wrap to a new line. Make the font size compress instead.
     }
 
     override func willActivate() {
@@ -48,6 +61,14 @@ class InterfaceController: WKInterfaceController {
 	
 	// MARK: - UI
 	
+	@IBAction func playPause() {
+		if paused {
+			playTapped()
+		} else {
+			pauseTapped()
+		}
+	}
+	
 	@IBAction func playTapped() {
 		shouldPause = false
 		changeWord()
@@ -57,16 +78,29 @@ class InterfaceController: WKInterfaceController {
 		shouldPause = true
 	}
 	
+	func setPlayPauseIcon() {
+		if paused {
+			pauseImage.setImageNamed("Pause")
+		} else if rewinding {
+			pauseImage.setImageNamed("Rewind")
+		} else {
+//			pauseImage.setImageNamed("Play")
+		}
+	}
+	
 	// MARK: -
 	
 	func changeWord() {
 		// check if we should pause reading
 		if shouldPause {
+			paused = true
 			return
+		} else if paused {
+			paused = false
 		}
 		
 		if let nextWord = wordManager.nextWord() {
-			currWord.setText(nextWord)
+			currWord.setTitle(nextWord)
 			infoText.setText(nil)
 			// schedule the callback to display the next word
 			let wordsPerMinute = 150
@@ -76,7 +110,7 @@ class InterfaceController: WKInterfaceController {
 				self.changeWord()
 			})
 		} else {
-			currWord.setText(nil)
+			currWord.setTitle(nil)
 			infoText.setText("Done reading.")
 		}
 	}
@@ -87,7 +121,6 @@ class InterfaceController: WKInterfaceController {
 		if let containerURL = fileManager.containerURLForSecurityApplicationGroupIdentifier("group.stela.text") {
 			if let sharedWordsURL = NSURL(string: sharedWordsFileName, relativeToURL: containerURL) {
 				wordManager = WordManager(serializedWordsAtURL: sharedWordsURL)
-				println(wordManager)
 			}
 		}
 	}

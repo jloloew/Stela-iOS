@@ -18,11 +18,11 @@ class WordManager {
 		return !words.isEmpty
 	}
 	
-	required init?(serializedWordsAtURL wordsURL: NSURL) {
+	required init(serializedWordsAtURL wordsURL: NSURL) {
 		if let wordsArray = NSArray(contentsOfURL: wordsURL) {
-			words = wordsArray as [String]
+			words = wordsArray as! [String]
 		} else {
-			return nil
+			println("\(__FUNCTION__): Unable to load words from file.")
 		}
 	}
 	

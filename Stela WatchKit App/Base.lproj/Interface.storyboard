@@ -1,45 +1,48 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="6751" systemVersion="14C1514" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="AgC-eL-Hgc">
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="7531" systemVersion="14D131" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="Xht-6s-4AG">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7520"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="3737"/>
     </dependencies>
     <scenes>
         <!--Stela-->
-        <scene sceneID="aou-V4-d1y">
+        <scene sceneID="lrj-mT-MDu">
             <objects>
-                <controller title="Stela" id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Stela_WatchKit_App" customModuleProvider="target">
+                <controller title="Stela" id="Xht-6s-4AG" customClass="InterfaceController" customModule="Stela_WatchKit_App" customModuleProvider="target">
                     <items>
-                        <imageView alignment="center" id="Kf2-OX-edb"/>
-                        <label alignment="center" verticalAlignment="center" text="Stela" textAlignment="center" minimumScaleFactor="0.0" id="oCS-aQ-agp">
+                        <imageView alignment="center" alpha="0.79999999999999982" image="Pause" id="MI4-PJ-Fhc"/>
+                        <button width="1" alignment="center" verticalAlignment="center" title="Stela" backgroundImage="ReadingBackground" id="IOi-od-10g">
                             <fontDescription key="font" type="system" weight="medium" pointSize="28"/>
-                        </label>
-                        <label alignment="center" verticalAlignment="bottom" text="Info text" textAlignment="center" numberOfLines="2" minimumScaleFactor="0.0" id="nUi-a8-Kaz">
+                            <connections>
+                                <action selector="playPause" destination="Xht-6s-4AG" id="Oln-p7-cfs"/>
+                            </connections>
+                        </button>
+                        <label alignment="center" verticalAlignment="bottom" alpha="0.79999999999999982" text="Info text" textAlignment="center" numberOfLines="2" minimumScaleFactor="0.0" id="Z0y-FH-4hV">
                             <fontDescription key="font" type="system" weight="semibold" pointSize="20"/>
                         </label>
                     </items>
-                    <menu key="menu" id="XQH-uZ-PZE">
+                    <menu key="menu" id="NHe-F0-wQb">
                         <items>
-                            <menuItem title="Pause" icon="pause" id="dmT-FT-IlV">
+                            <menuItem title="Pause" icon="pause" id="1ao-ir-gOS">
                                 <connections>
-                                    <action selector="pauseTapped" destination="AgC-eL-Hgc" id="mon-qq-Kcz"/>
+                                    <action selector="pauseTapped" destination="Xht-6s-4AG" id="X9W-6v-5HR"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Play" icon="play" id="XKi-Lw-RVI">
+                            <menuItem title="Play" icon="play" id="sES-Nr-e7i">
                                 <connections>
-                                    <action selector="playTapped" destination="AgC-eL-Hgc" id="JeT-QH-hcp"/>
+                                    <action selector="playTapped" destination="Xht-6s-4AG" id="cbD-Wh-v9L"/>
                                 </connections>
                             </menuItem>
                         </items>
                     </menu>
                     <connections>
-                        <outlet property="currWord" destination="oCS-aQ-agp" id="d6U-fR-FtE"/>
-                        <outlet property="infoText" destination="nUi-a8-Kaz" id="k0Q-YZ-uwK"/>
-                        <outlet property="pauseImage" destination="Kf2-OX-edb" id="3jo-kc-uTH"/>
+                        <outlet property="currWord" destination="IOi-od-10g" id="9iL-uv-VuW"/>
+                        <outlet property="infoText" destination="Z0y-FH-4hV" id="yI9-B5-8qE"/>
+                        <outlet property="pauseImage" destination="MI4-PJ-Fhc" id="uyN-oe-Btp"/>
                     </connections>
                 </controller>
             </objects>
-            <point key="canvasLocation" x="298" y="388"/>
+            <point key="canvasLocation" x="193" y="657"/>
         </scene>
     </scenes>
 </document>
