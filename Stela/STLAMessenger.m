@@ -267,7 +267,7 @@
 		NSURL *sharedWordsURL = [NSURL URLWithString:STLASharedWordsFileName relativeToURL:containerURL];
 		[words writeToURL:sharedWordsURL atomically:YES];
 		
-		NSLog(@"Wrote %lu words to file at %@", words.count, sharedWordsURL);
+		NSLog(@"Wrote %lu words to file at %@", (unsigned long)words.count, sharedWordsURL);
 		
 		handler(YES);
 	}
