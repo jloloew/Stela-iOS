@@ -178,7 +178,7 @@
 		NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 		[nc postNotificationName:STLAWatchConnectionStateChangeNotification
 						  object:self.connectedWatch
-						userInfo:@{kWatchConnectionStateChangeNotificationBoolKey: @(NO)}];
+						userInfo:@{ kWatchConnectionStateChangeNotificationBoolKey: @(NO) }];
 		
 		self.connectedWatch = nil;
 	}];
@@ -218,37 +218,59 @@
 		return;
 	}
 	
-	STLAWordManager *wordManager = [STLAWordManager defaultManager];
-	
-	// divide up the words into blocks
-	[wordManager setTextBlocks:(NSMutableArray *)words];
-	
-	[self resetWatch];
-	
-	// tell the watch the total number of blocks and the block size
-	NSDictionary *message = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY): @(wordManager.textBlocks.count),
-							  @(TEXT_BLOCK_SIZE_KEY): @(wordManager.blockSize)};
-	[self sendMessage:message completion:nil];
-	
-	// send the first block to the watch
-	[self sendBlockAtIndex:0 completion:^(BOOL success) {
-		if (success) {
-			#if DEBUG
-				NSLog(@"%s:%d: Successfully sent first block to the watch.",
-					  __PRETTY_FUNCTION__, __LINE__);
-			#endif
-			
-			self.watchIsEmpty = NO;
-		} else {
-			NSLog(@"%s:%d: Failed to send the first block to the watch.",
-				  __PRETTY_FUNCTION__, __LINE__);
-		}
+	// check for a connected Pebble
+	if (self.connectedWatch) {
+		// Pebble is connected
+		#if DEBUG
+			NSLog(@"Sending to Pebble (%@)", self.connectedWatch);
+		#endif
 		
-		// call our caller's handler
-		if (handler) {
-			handler(success);
-		}
-	}];
+		STLAWordManager *wordManager = [STLAWordManager defaultManager];
+		
+		// divide up the words into blocks
+		[wordManager setTextBlocks:(NSMutableArray *)words];
+		
+		[self resetWatch];
+		
+		// tell the watch the total number of blocks and the block size
+		NSDictionary *message = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY): @(wordManager.textBlocks.count),
+								  @(TEXT_BLOCK_SIZE_KEY): @(wordManager.blockSize)};
+		[self sendMessage:message completion:nil];
+		
+		// send the first block to the watch
+		[self sendBlockAtIndex:0 completion:^(BOOL success) {
+			if (success) {
+				#if DEBUG
+					NSLog(@"%s:%d: Successfully sent first block to the watch.",
+						  __PRETTY_FUNCTION__, __LINE__);
+				#endif
+				
+				self.watchIsEmpty = NO;
+			} else {
+				NSLog(@"%s:%d: Failed to send the first block to the watch.",
+					  __PRETTY_FUNCTION__, __LINE__);
+			}
+			
+			// call our caller's handler
+			if (handler) {
+				handler(success);
+			}
+		}];
+	} else {
+		// no Pebble connected, send to Apple Watch instead
+		#if DEBUG
+			NSLog(@"Sending to Apple Watch");
+		#endif
+		
+		// save the words to a shared file
+		NSURL *containerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:@"group.stela.text"];
+		NSURL *sharedWordsURL = [NSURL URLWithString:STLASharedWordsFileName relativeToURL:containerURL];
+		[words writeToURL:sharedWordsURL atomically:YES];
+		
+		NSLog(@"Wrote %lu words to file at %@", words.count, sharedWordsURL);
+		
+		handler(YES);
+	}
 }
 
 #pragma mark Sending messages

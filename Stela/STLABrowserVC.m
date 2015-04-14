@@ -11,6 +11,7 @@
 #import "TargetConditionals.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import <AFNetworking.h>
+#import "AppDelegate.h"
 #import "STLAConstants.h"
 #import "STLAMessenger.h"
 #import "STLABrowserVC.h"
@@ -82,7 +83,7 @@ static const CGFloat kAddressHeight = 24.0f;
 		self.webView.scrollView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
 	}
 	
-	/* Create the page title label */
+	// Create the page title label
 	UINavigationBar *navBar = self.navigationController.navigationBar;
 	CGRect labelFrame = CGRectMake(kMargin, kSpacer, navBar.bounds.size.width - 2*kMargin, kLabelHeight);
 	UILabel *label = [[UILabel alloc] initWithFrame:labelFrame];
@@ -93,13 +94,23 @@ static const CGFloat kAddressHeight = 24.0f;
 	[navBar addSubview:label];
 	self.pageTitle = label;
 	
-	/* load the saved URL, if any */
+	// load the saved URL, if any
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	NSString *savedURL = [defaults stringForKey:@"savedURL"];
 	if (!savedURL || [savedURL isEqualToString:@""]) {
-		savedURL = kDefaultURL;
+		// show the Wikipedia page for Pebble if connected, Apple Watch otherwise.
+		if ([STLAMessenger defaultMessenger].connectedWatch) {
+			savedURL = kDefaultPebbleURL;
+			#if DEBUG
+				NSLog(@"Used default Pebble URL.");
+			#endif
+		} else {
+			savedURL = kDefaultAppleWatchURL;
+			#if DEBUG
+				NSLog(@"Used default Apple Watch URL.");
+			#endif
+		}
 	#if DEBUG
-		NSLog(@"Used default URL.");
 	} else {
 		NSLog(@"Used saved URL (%@).", savedURL);
 	#endif
@@ -128,9 +139,9 @@ static const CGFloat kAddressHeight = 24.0f;
 	// register for notifications to update the UI when the watch connects or disconnects
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	self.watchConnectionObserver = [nc addObserverForName:STLAWatchConnectionStateChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
-		NSNumber *_connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
-		BOOL connected = [_connected boolValue];
-		self.sendToPebble.enabled = connected;
+		NSNumber *connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
+//		self.sendToPebble.enabled = [connected boolValue];
+		NSLog(@"Pebble is now %@", connected);
 	}];
 	
 	// Start up by loading the Pebble Wikipedia page
@@ -214,6 +225,9 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.progressHUD.dimBackground = YES;
 	
 	void (^requestFailed)(NSString *errorMessage) = ^void(NSString *errorMessage) {
+		// make my life just a little easier
+		NSLog(@"Failed to get text for article at URL: %@", self.addressField.text);
+		
 		// hide the HUD
 		[self.progressHUD hide:YES];
 		// Tell the user that retrieval failed
@@ -261,7 +275,7 @@ static const CGFloat kAddressHeight = 24.0f;
 					 [self.progressHUD hide:YES];
 				 } else {
 					 NSLog(@"ERROR. Failed to send words to the watch.");
-					 requestFailed(NSLocalizedString(@"Something went wrong. Please wait a few moments, then try again.", nil));
+//					 requestFailed(NSLocalizedString(@"Something went wrong. Please wait a few moments, then try again.", nil));
 				 }
 			 }];
 		 }

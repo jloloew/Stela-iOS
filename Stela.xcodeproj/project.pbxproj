@@ -83,6 +83,8 @@
 		0738A26375D9E98DBE30CA57 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		1D34E64D4E5060C399D63C06 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		ADF2AE4C62924C3CA1A7D7C3 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8019FBE1ADC62B6001EC544 /* JLUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JLUtils.h; sourceTree = "<group>"; };
+		B80D7D6B1AD88C3F00DD7822 /* STLAWatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STLAWatch.h; sourceTree = "<group>"; };
 		B81DA2A918F8C61800C49C21 /* Stela.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stela.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B81DA2AC18F8C61800C49C21 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		B81DA2AE18F8C61800C49C21 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -219,22 +221,24 @@
 		B81DA2B218F8C61800C49C21 /* Stela */ = {
 			isa = PBXGroup;
 			children = (
-				B8D921EA1ACF83DC00138350 /* Stela.entitlements */,
 				B81DA2BB18F8C61800C49C21 /* AppDelegate.h */,
-				B86E1B2A18F8C84800FAD644 /* STLABrowserVC.h */,
-				B8CF7E3C1A5BAB9800190FA7 /* STLAConstants.h */,
-				B8B0C4611A7C316700EDE404 /* STLAMessenger.h */,
-				B8B0C4641A7C448100EDE404 /* STLAWordManager.h */,
-				B81DA2C418F8C61800C49C21 /* ViewController.h */,
 				B81DA2BC18F8C61800C49C21 /* AppDelegate.m */,
-				B86E1B2B18F8C84800FAD644 /* STLABrowserVC.m */,
-				B8B0C4671A7C945800EDE404 /* STLAConstants.m */,
-				B8B0C4621A7C316700EDE404 /* STLAMessenger.m */,
-				B8B0C4651A7C448100EDE404 /* STLAWordManager.m */,
-				B81DA2C518F8C61800C49C21 /* ViewController.m */,
 				B81DA2C718F8C61800C49C21 /* Images.xcassets */,
+				B8019FBE1ADC62B6001EC544 /* JLUtils.h */,
 				B81DA2BE18F8C61800C49C21 /* Main_iPhone.storyboard */,
+				B8D921EA1ACF83DC00138350 /* Stela.entitlements */,
+				B86E1B2A18F8C84800FAD644 /* STLABrowserVC.h */,
+				B86E1B2B18F8C84800FAD644 /* STLABrowserVC.m */,
+				B8CF7E3C1A5BAB9800190FA7 /* STLAConstants.h */,
+				B8B0C4671A7C945800EDE404 /* STLAConstants.m */,
+				B8B0C4611A7C316700EDE404 /* STLAMessenger.h */,
+				B8B0C4621A7C316700EDE404 /* STLAMessenger.m */,
+				B80D7D6B1AD88C3F00DD7822 /* STLAWatch.h */,
+				B8B0C4641A7C448100EDE404 /* STLAWordManager.h */,
+				B8B0C4651A7C448100EDE404 /* STLAWordManager.m */,
 				B81DA2B318F8C61800C49C21 /* Supporting Files */,
+				B81DA2C418F8C61800C49C21 /* ViewController.h */,
+				B81DA2C518F8C61800C49C21 /* ViewController.m */,
 			);
 			path = Stela;
 			sourceTree = "<group>";

@@ -9,6 +9,9 @@
 import Foundation
 
 
+private let maxWordLength = 9
+
+
 class WordManager {
 	
 	var words = [String]()
@@ -34,9 +37,24 @@ class WordManager {
 		}
 	}
 	
+	func prevWord() -> String? {
+		if currWordIndex > 0 {
+			return words[currWordIndex--]
+		} else {
+			return nil
+		}
+	}
+	
 	/// Check the list of words for any words that are too long to display on a single screen. Excessively long words are hyphenated and split into two.
 	func fixWordLengthsIfNecessary() {
-		
+		for i in 0 ..< words.count {
+			if count(words[i]) > maxWordLength {
+				let original = words[i]
+				words[i] = original[0 ..< maxWordLength - 1] + "–"
+				let newWord = "–" + original.substringFromIndex(advance(original.startIndex, maxWordLength - 1))
+				words.insert(newWord, atIndex: i)
+			}
+		}
 	}
 	
 }
@@ -57,5 +75,18 @@ extension WordManager : Printable, DebugPrintable {
 	
 	var debugDescription: String {
 		return description
+	}
+}
+
+/// Enable String subscripting.
+// source: https://stackoverflow.com/questions/24044851/how-do-you-use-string-substringwithrange-or-how-do-ranges-work-in-swift
+extension String {
+	subscript(r: Range<Int>) -> String {
+		get {
+			let startIndex = advance(self.startIndex, r.startIndex)
+			let endIndex = advance(startIndex, r.endIndex - r.startIndex)
+			
+			return self[Range(start: startIndex, end: endIndex)]
+		}
 	}
 }

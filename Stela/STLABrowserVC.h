@@ -7,12 +7,8 @@
 //
 
 @import UIKit;
-#import "AppDelegate.h"
 
 
 @interface STLABrowserViewController : UIViewController
-
-/// 
-- (IBAction)sendToPebble:(id)sender;
 
 @end
