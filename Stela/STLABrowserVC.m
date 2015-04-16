@@ -188,6 +188,11 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (void)loadRequestFromString:(NSString *)urlString {
 	NSURL *url = [NSURL URLWithString:urlString];
+	if (!url) {
+		NSString *escapedQuery = [urlString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		NSString *searchURL = [NSString stringWithFormat:@"https://google.com/search?q=%@", escapedQuery];
+		url = [NSURL URLWithString:searchURL];
+	}
 	if (!url.scheme) {
 		NSString *modifiedURLString = [NSString stringWithFormat:@"http://%@", url];
 		url = [NSURL URLWithString:modifiedURLString];
