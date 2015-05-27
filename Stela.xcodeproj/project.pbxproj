@@ -15,7 +15,6 @@
 		B81DA2B918F8C61800C49C21 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B81DA2B818F8C61800C49C21 /* main.m */; };
 		B81DA2BD18F8C61800C49C21 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B81DA2BC18F8C61800C49C21 /* AppDelegate.m */; };
 		B81DA2C018F8C61800C49C21 /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B81DA2BE18F8C61800C49C21 /* Main_iPhone.storyboard */; };
-		B81DA2C618F8C61800C49C21 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B81DA2C518F8C61800C49C21 /* ViewController.m */; };
 		B81DA2C818F8C61800C49C21 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B81DA2C718F8C61800C49C21 /* Images.xcassets */; };
 		B81DA2CF18F8C61800C49C21 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2CE18F8C61800C49C21 /* XCTest.framework */; };
 		B81DA2D018F8C61800C49C21 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B81DA2AC18F8C61800C49C21 /* Foundation.framework */; };
@@ -32,13 +31,6 @@
 		B8B0C4631A7C316700EDE404 /* STLAMessenger.m in Sources */ = {isa = PBXBuildFile; fileRef = B8B0C4621A7C316700EDE404 /* STLAMessenger.m */; };
 		B8B0C4661A7C448100EDE404 /* STLAWordManager.m in Sources */ = {isa = PBXBuildFile; fileRef = B8B0C4651A7C448100EDE404 /* STLAWordManager.m */; };
 		B8B0C4681A7C945800EDE404 /* STLAConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = B8B0C4671A7C945800EDE404 /* STLAConstants.m */; };
-		B8D921CC1ACF583C00138350 /* InterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D921CB1ACF583C00138350 /* InterfaceController.swift */; };
-		B8D921CE1ACF583C00138350 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B8D921CD1ACF583C00138350 /* Images.xcassets */; };
-		B8D921D21ACF583C00138350 /* Stela WatchKit App.app in Resources */ = {isa = PBXBuildFile; fileRef = B8D921D11ACF583C00138350 /* Stela WatchKit App.app */; };
-		B8D921DA1ACF583C00138350 /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B8D921D81ACF583C00138350 /* Interface.storyboard */; };
-		B8D921DC1ACF583C00138350 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B8D921DB1ACF583C00138350 /* Images.xcassets */; };
-		B8D921DF1ACF583C00138350 /* Stela WatchKit Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = B8D921C71ACF583C00138350 /* Stela WatchKit Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		B8D921EC1ACF87D100138350 /* WordManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D921EB1ACF87D100138350 /* WordManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,20 +41,6 @@
 			remoteGlobalIDString = B81DA2A818F8C61800C49C21;
 			remoteInfo = Stela;
 		};
-		B8D921D31ACF583C00138350 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B81DA2A118F8C61800C49C21 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B8D921D01ACF583C00138350;
-			remoteInfo = "Stela WatchKit App";
-		};
-		B8D921DD1ACF583C00138350 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B81DA2A118F8C61800C49C21 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B8D921C61ACF583C00138350;
-			remoteInfo = "Stela WatchKit Extension";
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -72,7 +50,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				B8D921DF1ACF583C00138350 /* Stela WatchKit Extension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -96,8 +73,6 @@
 		B81DA2BB18F8C61800C49C21 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		B81DA2BC18F8C61800C49C21 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		B81DA2BF18F8C61800C49C21 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPhone.storyboard; sourceTree = "<group>"; };
-		B81DA2C418F8C61800C49C21 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		B81DA2C518F8C61800C49C21 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		B81DA2C718F8C61800C49C21 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		B81DA2CD18F8C61800C49C21 /* StelaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StelaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B81DA2CE18F8C61800C49C21 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -118,17 +93,6 @@
 		B8B0C4651A7C448100EDE404 /* STLAWordManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STLAWordManager.m; sourceTree = "<group>"; };
 		B8B0C4671A7C945800EDE404 /* STLAConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STLAConstants.m; sourceTree = "<group>"; };
 		B8CF7E3C1A5BAB9800190FA7 /* STLAConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = STLAConstants.h; sourceTree = "<group>"; };
-		B8D921C71ACF583C00138350 /* Stela WatchKit Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Stela WatchKit Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B8D921CA1ACF583C00138350 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		B8D921CB1ACF583C00138350 /* InterfaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceController.swift; sourceTree = "<group>"; };
-		B8D921CD1ACF583C00138350 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		B8D921D11ACF583C00138350 /* Stela WatchKit App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Stela WatchKit App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B8D921D71ACF583C00138350 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		B8D921D91ACF583C00138350 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
-		B8D921DB1ACF583C00138350 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		B8D921E91ACF83BF00138350 /* Stela WatchKit Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Stela WatchKit Extension.entitlements"; sourceTree = "<group>"; };
-		B8D921EA1ACF83DC00138350 /* Stela.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Stela.entitlements; sourceTree = "<group>"; };
-		B8D921EB1ACF87D100138350 /* WordManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WordManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,13 +122,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B8D921C41ACF583C00138350 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -182,8 +139,6 @@
 			children = (
 				B81DA2B218F8C61800C49C21 /* Stela */,
 				B81DA2D418F8C61800C49C21 /* StelaTests */,
-				B8D921C81ACF583C00138350 /* Stela WatchKit Extension */,
-				B8D921D51ACF583C00138350 /* Stela WatchKit App */,
 				B81DA2AB18F8C61800C49C21 /* Frameworks */,
 				B81DA2AA18F8C61800C49C21 /* Products */,
 				40E941894CBA700A2C21BB92 /* Pods */,
@@ -195,8 +150,6 @@
 			children = (
 				B81DA2A918F8C61800C49C21 /* Stela.app */,
 				B81DA2CD18F8C61800C49C21 /* StelaTests.xctest */,
-				B8D921C71ACF583C00138350 /* Stela WatchKit Extension.appex */,
-				B8D921D11ACF583C00138350 /* Stela WatchKit App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -226,7 +179,6 @@
 				B81DA2C718F8C61800C49C21 /* Images.xcassets */,
 				B8019FBE1ADC62B6001EC544 /* JLUtils.h */,
 				B81DA2BE18F8C61800C49C21 /* Main_iPhone.storyboard */,
-				B8D921EA1ACF83DC00138350 /* Stela.entitlements */,
 				B86E1B2A18F8C84800FAD644 /* STLABrowserVC.h */,
 				B86E1B2B18F8C84800FAD644 /* STLABrowserVC.m */,
 				B8CF7E3C1A5BAB9800190FA7 /* STLAConstants.h */,
@@ -237,8 +189,6 @@
 				B8B0C4641A7C448100EDE404 /* STLAWordManager.h */,
 				B8B0C4651A7C448100EDE404 /* STLAWordManager.m */,
 				B81DA2B318F8C61800C49C21 /* Supporting Files */,
-				B81DA2C418F8C61800C49C21 /* ViewController.h */,
-				B81DA2C518F8C61800C49C21 /* ViewController.m */,
 			);
 			path = Stela;
 			sourceTree = "<group>";
@@ -273,44 +223,6 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		B8D921C81ACF583C00138350 /* Stela WatchKit Extension */ = {
-			isa = PBXGroup;
-			children = (
-				B8D921E91ACF83BF00138350 /* Stela WatchKit Extension.entitlements */,
-				B8D921CB1ACF583C00138350 /* InterfaceController.swift */,
-				B8D921EB1ACF87D100138350 /* WordManager.swift */,
-				B8D921CD1ACF583C00138350 /* Images.xcassets */,
-				B8D921C91ACF583C00138350 /* Supporting Files */,
-			);
-			path = "Stela WatchKit Extension";
-			sourceTree = "<group>";
-		};
-		B8D921C91ACF583C00138350 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				B8D921CA1ACF583C00138350 /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		B8D921D51ACF583C00138350 /* Stela WatchKit App */ = {
-			isa = PBXGroup;
-			children = (
-				B8D921D81ACF583C00138350 /* Interface.storyboard */,
-				B8D921DB1ACF583C00138350 /* Images.xcassets */,
-				B8D921D61ACF583C00138350 /* Supporting Files */,
-			);
-			path = "Stela WatchKit App";
-			sourceTree = "<group>";
-		};
-		B8D921D61ACF583C00138350 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				B8D921D71ACF583C00138350 /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -329,7 +241,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				B8D921DE1ACF583C00138350 /* PBXTargetDependency */,
 			);
 			name = Stela;
 			productName = Stela;
@@ -354,39 +265,6 @@
 			productReference = B81DA2CD18F8C61800C49C21 /* StelaTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		B8D921C61ACF583C00138350 /* Stela WatchKit Extension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B8D921E51ACF583C00138350 /* Build configuration list for PBXNativeTarget "Stela WatchKit Extension" */;
-			buildPhases = (
-				B8D921C31ACF583C00138350 /* Sources */,
-				B8D921C41ACF583C00138350 /* Frameworks */,
-				B8D921C51ACF583C00138350 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B8D921D41ACF583C00138350 /* PBXTargetDependency */,
-			);
-			name = "Stela WatchKit Extension";
-			productName = "Stela WatchKit Extension";
-			productReference = B8D921C71ACF583C00138350 /* Stela WatchKit Extension.appex */;
-			productType = "com.apple.product-type.watchkit-extension";
-		};
-		B8D921D01ACF583C00138350 /* Stela WatchKit App */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B8D921E41ACF583C00138350 /* Build configuration list for PBXNativeTarget "Stela WatchKit App" */;
-			buildPhases = (
-				B8D921CF1ACF583C00138350 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "Stela WatchKit App";
-			productName = "Stela WatchKit App";
-			productReference = B8D921D11ACF583C00138350 /* Stela WatchKit App.app */;
-			productType = "com.apple.product-type.application.watchapp";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -400,7 +278,7 @@
 						DevelopmentTeam = VM5XXWMN9Y;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
-								enabled = 1;
+								enabled = 0;
 							};
 							com.apple.BackgroundModes = {
 								enabled = 1;
@@ -412,19 +290,6 @@
 					};
 					B81DA2CC18F8C61800C49C21 = {
 						TestTargetID = B81DA2A818F8C61800C49C21;
-					};
-					B8D921C61ACF583C00138350 = {
-						CreatedOnToolsVersion = 6.2;
-						DevelopmentTeam = VM5XXWMN9Y;
-						SystemCapabilities = {
-							com.apple.ApplicationGroups.iOS = {
-								enabled = 1;
-							};
-						};
-					};
-					B8D921D01ACF583C00138350 = {
-						CreatedOnToolsVersion = 6.2;
-						DevelopmentTeam = VM5XXWMN9Y;
 					};
 				};
 			};
@@ -443,8 +308,6 @@
 			targets = (
 				B81DA2A818F8C61800C49C21 /* Stela */,
 				B81DA2CC18F8C61800C49C21 /* StelaTests */,
-				B8D921C61ACF583C00138350 /* Stela WatchKit Extension */,
-				B8D921D01ACF583C00138350 /* Stela WatchKit App */,
 			);
 		};
 /* End PBXProject section */
@@ -466,24 +329,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B81DA2D918F8C61800C49C21 /* InfoPlist.strings in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B8D921C51ACF583C00138350 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B8D921D21ACF583C00138350 /* Stela WatchKit App.app in Resources */,
-				B8D921CE1ACF583C00138350 /* Images.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B8D921CF1ACF583C00138350 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B8D921DA1ACF583C00138350 /* Interface.storyboard in Resources */,
-				B8D921DC1ACF583C00138350 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,7 +390,6 @@
 				B8B0C4631A7C316700EDE404 /* STLAMessenger.m in Sources */,
 				B86E1B2C18F8C84800FAD644 /* STLABrowserVC.m in Sources */,
 				B81DA2B918F8C61800C49C21 /* main.m in Sources */,
-				B81DA2C618F8C61800C49C21 /* ViewController.m in Sources */,
 				B8B0C4661A7C448100EDE404 /* STLAWordManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -558,15 +402,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B8D921C31ACF583C00138350 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B8D921CC1ACF583C00138350 /* InterfaceController.swift in Sources */,
-				B8D921EC1ACF87D100138350 /* WordManager.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -574,16 +409,6 @@
 			isa = PBXTargetDependency;
 			target = B81DA2A818F8C61800C49C21 /* Stela */;
 			targetProxy = B81DA2D218F8C61800C49C21 /* PBXContainerItemProxy */;
-		};
-		B8D921D41ACF583C00138350 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B8D921D01ACF583C00138350 /* Stela WatchKit App */;
-			targetProxy = B8D921D31ACF583C00138350 /* PBXContainerItemProxy */;
-		};
-		B8D921DE1ACF583C00138350 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B8D921C61ACF583C00138350 /* Stela WatchKit Extension */;
-			targetProxy = B8D921DD1ACF583C00138350 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -610,14 +435,6 @@
 				B81DA2D818F8C61800C49C21 /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		B8D921D81ACF583C00138350 /* Interface.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				B8D921D91ACF583C00138350 /* Base */,
-			);
-			name = Interface.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -702,7 +519,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
-				CODE_SIGN_ENTITLEMENTS = Stela/Stela.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 63;
@@ -734,7 +551,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
-				CODE_SIGN_ENTITLEMENTS = Stela/Stela.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 63;
@@ -799,93 +616,6 @@
 			};
 			name = Release;
 		};
-		B8D921E01ACF583C00138350 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CODE_SIGN_ENTITLEMENTS = "Stela WatchKit Extension/Stela WatchKit Extension.entitlements";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "Stela WatchKit Extension/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				MTL_ENABLE_DEBUG_INFO = YES;
-				PRODUCT_NAME = "${TARGET_NAME}";
-				PROVISIONING_PROFILE = "";
-				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		B8D921E11ACF583C00138350 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CODE_SIGN_ENTITLEMENTS = "Stela WatchKit Extension/Stela WatchKit Extension.entitlements";
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				COPY_PHASE_STRIP = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				INFOPLIST_FILE = "Stela WatchKit Extension/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				MTL_ENABLE_DEBUG_INFO = NO;
-				PRODUCT_NAME = "${TARGET_NAME}";
-				PROVISIONING_PROFILE = "";
-				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "";
-			};
-			name = Release;
-		};
-		B8D921E21ACF583C00138350 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				IBSC_MODULE = Stela_WatchKit_Extension;
-				INFOPLIST_FILE = "Stela WatchKit App/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
-				MTL_ENABLE_DEBUG_INFO = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = 4;
-				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = "1,4";
-			};
-			name = Debug;
-		};
-		B8D921E31ACF583C00138350 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				COPY_PHASE_STRIP = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				IBSC_MODULE = Stela_WatchKit_Extension;
-				INFOPLIST_FILE = "Stela WatchKit App/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = 4;
-				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = "1,4";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -912,24 +642,6 @@
 			buildConfigurations = (
 				B81DA2E218F8C61800C49C21 /* Debug */,
 				B81DA2E318F8C61800C49C21 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B8D921E41ACF583C00138350 /* Build configuration list for PBXNativeTarget "Stela WatchKit App" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B8D921E21ACF583C00138350 /* Debug */,
-				B8D921E31ACF583C00138350 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B8D921E51ACF583C00138350 /* Build configuration list for PBXNativeTarget "Stela WatchKit Extension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B8D921E01ACF583C00138350 /* Debug */,
-				B8D921E11ACF583C00138350 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

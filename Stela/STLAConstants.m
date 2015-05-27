@@ -19,9 +19,6 @@ static unsigned char const CURRENT_PATCH_VERSION = 2;
 NSString * const API_KEY = @"f6687a0711a74306ac45cb89c08b026fe0cd03d6";
 NSString * const API_URL = @"http://access.alchemyapi.com/calls/url/URLGetText";
 
-NSString * const STLAAppleWatchHasConnectedKey = @"Apple Watch has connected";
-NSString * const STLASharedWordsFileName = @"sharedWords";
-
 NSString * const stelaUUIDString = @"6db75b90-8dad-4490-94ca-0fef4296c78e";
 // Stela_chessgecko	@"5bee74a1-b87d-4c62-adcf-8e4eec7a8d69"
 // Stela_revamped	@"0b96289a-fed1-4970-9732-3f8425e616cb"
@@ -29,7 +26,6 @@ NSString * const stelaUUIDString = @"6db75b90-8dad-4490-94ca-0fef4296c78e";
 // Stela-Linked		@"6db75b90-8dad-4490-94ca-0fef4296c78e"
 
 NSString * const kDefaultPebbleURL = @"https://wikipedia.org/wiki/Pebble_watch";
-NSString * const kDefaultAppleWatchURL = @"https://wikipedia.org/wiki/Apple_Watch";
 
 NSUInteger const kPebbleMaxMessageSize = 25;
 

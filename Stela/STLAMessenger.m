@@ -257,19 +257,8 @@
 			}
 		}];
 	} else {
-		// no Pebble connected, send to Apple Watch instead
-		#if DEBUG
-			NSLog(@"Sending to Apple Watch");
-		#endif
-		
-		// save the words to a shared file
-		NSURL *containerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:@"group.stela.text"];
-		NSURL *sharedWordsURL = [NSURL URLWithString:STLASharedWordsFileName relativeToURL:containerURL];
-		[words writeToURL:sharedWordsURL atomically:YES];
-		
-		NSLog(@"Wrote %lu words to file at %@", (unsigned long)words.count, sharedWordsURL);
-		
-		handler(YES);
+		// no Pebble connected
+		handler(NO);
 	}
 }
 
@@ -277,7 +266,7 @@
 
 - (NSDictionary *)prepareDictionaryForAppMessage:(NSDictionary *)dictionary
 {
-	NSMutableDictionary *dict = [NSMutableDictionary dictionary]; ///< output dictionary
+	NSMutableDictionary *dict = [NSMutableDictionary dictionary]; ///< Output dictionary
 	for (id key in dictionary) {
 		if ([key isKindOfClass:[NSNumber class]]) {
 			// convert the key

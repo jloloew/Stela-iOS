@@ -94,19 +94,6 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 			  __PRETTY_FUNCTION__, __LINE__, (unsigned long)allWords.count,
 			  (unsigned long)_textBlocks.count, (unsigned long)self.blockSize);
 	#endif
-	
-	// share these words with the WatchKit extension
-	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		// we have to write the words to a file in our App Group's shared container
-		NSFileManager *fileManager = [NSFileManager defaultManager];
-		NSURL *containerURL = [fileManager containerURLForSecurityApplicationGroupIdentifier:@"group.stela.text"];
-		NSURL *sharedWordsURL = [NSURL URLWithString:kSharedWordsFileName relativeToURL:containerURL];
-		[allWords writeToURL:sharedWordsURL atomically:YES];
-		
-		
-		
-		NSLog(@"Saved words to shared app container.");
-	});
 }
 
 - (NSArray *)getWordsOfSize:(NSUInteger)numBytes

@@ -12,6 +12,7 @@
 #import <MBProgressHUD/MBProgressHUD.h>
 #import <AFNetworking.h>
 #import "AppDelegate.h"
+#import "JLUtils.h"
 #import "STLAConstants.h"
 #import "STLAMessenger.h"
 #import "STLABrowserVC.h"
@@ -98,18 +99,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	NSString *savedURL = [defaults stringForKey:@"savedURL"];
 	if (!savedURL || [savedURL isEqualToString:@""]) {
-		// show the Wikipedia page for Pebble if connected, Apple Watch otherwise.
-		if ([STLAMessenger defaultMessenger].connectedWatch) {
-			savedURL = kDefaultPebbleURL;
-			#if DEBUG
-				NSLog(@"Used default Pebble URL.");
-			#endif
-		} else {
-			savedURL = kDefaultAppleWatchURL;
-			#if DEBUG
-				NSLog(@"Used default Apple Watch URL.");
-			#endif
-		}
+		savedURL = kDefaultPebbleURL;
 	#if DEBUG
 	} else {
 		NSLog(@"Used saved URL (%@).", savedURL);
@@ -125,7 +115,13 @@ static const CGFloat kAddressHeight = 24.0f;
 	address.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 	address.borderStyle = UITextBorderStyleRoundedRect;
 	address.font = [UIFont systemFontOfSize:17];
+	address.enablesReturnKeyAutomatically = YES;
+	//*
 	address.keyboardType = UIKeyboardTypeURL;
+	address.returnKeyType = UIReturnKeyGo;
+	/*/
+	address.keyboardType = UIKeyboardTypeWebSearch;
+	//*/
 	address.clearButtonMode = UITextFieldViewModeWhileEditing;
 	[address addTarget:self
 				action:@selector(loadRequestFromAddressField:)
@@ -140,8 +136,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	self.watchConnectionObserver = [nc addObserverForName:STLAWatchConnectionStateChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
 		NSNumber *connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
-//		self.sendToPebble.enabled = [connected boolValue];
-		NSLog(@"Pebble is now %@", connected);
+		self.sendToPebble.enabled = [connected boolValue];
 	}];
 	
 	// Start up by loading the Pebble Wikipedia page
@@ -188,17 +183,28 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (void)loadRequestFromString:(NSString *)urlString {
 	NSURL *url = [NSURL URLWithString:urlString];
-	if (!url) {
-		NSString *escapedQuery = [urlString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-		NSString *searchURL = [NSString stringWithFormat:@"https://google.com/search?q=%@", escapedQuery];
-		url = [NSURL URLWithString:searchURL];
-	}
+	// add http:// if necessary
 	if (!url.scheme) {
 		NSString *modifiedURLString = [NSString stringWithFormat:@"http://%@", url];
 		url = [NSURL URLWithString:modifiedURLString];
 	}
-	NSURLRequest *urlRequest = [NSURLRequest requestWithURL:url];
-	[self.webView loadRequest:urlRequest];
+//	// make sure the URL is reachable to check if we should perform a web search instead
+//	if (url check) {
+//		<#statements#>
+//	}
+//	// if it's not a valid URL, do a web search instead
+//	if (!url) {
+//		NSString *escapedQuery = [urlString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+//		NSString *searchURL = [NSString stringWithFormat:@"https://google.com/search?q=%@", escapedQuery];
+//		url = [NSURL URLWithString:searchURL];
+//	}
+	// load the URL
+	if (url) {
+		NSURLRequest *urlRequest = [NSURLRequest requestWithURL:url];
+		[self.webView loadRequest:urlRequest];
+	} else {
+		JLERROR("Unable to create URL (attempt: %@) from original string: %@", url, urlString);
+	}
 }
 
 - (void)updateAddress:(NSString *)newAddress {
@@ -247,10 +253,9 @@ static const CGFloat kAddressHeight = 24.0f;
 	
 	// turn the webpage into an array of words
 	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-	NSDictionary *requestParameters = @{@"url": self.addressField.text,
-										@"apikey": API_KEY,
-										@"outputMode": @"json"
-										};
+	NSDictionary *requestParameters = @{ @"url": self.addressField.text,
+										 @"apikey": API_KEY,
+										 @"outputMode": @"json" };
 	[manager GET:API_URL parameters:requestParameters
 		 success:^(AFHTTPRequestOperation *operation, id responseObject) {
 			 // turn the responseObject into useful text
@@ -324,6 +329,15 @@ static const CGFloat kAddressHeight = 24.0f;
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation
 	  withError:(NSError *)error
 {
+//	// check if we were unable to load a web search as a URL
+//	if (error.code == -1003) {
+//		// A server with the specified hostname could not be found.
+//		NSURL *failingURL = error.userInfo[NSURLErrorFailingURLErrorKey];
+//		
+//		NSString *searchURL = [NSString stringWithFormat:@"https://google.com/search?q=%@", ]
+//	}
+	
+	// it's a real error
 	#if DEBUG
 		NSLog(@"%s Error: %@", __PRETTY_FUNCTION__, error);
 	#endif
