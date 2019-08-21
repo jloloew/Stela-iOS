@@ -3,7 +3,7 @@
 //  Stela
 //
 //  Created by Justin Loew on 4/11/14.
-//  Copyright (c) 2014 Justin Loew. All rights reserved.
+//  Copyright (c) 2014-2019 Justin Loew. All rights reserved.
 //
 
 @import UIKit;
@@ -63,7 +63,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	self.webView.navigationDelegate = self;
 	self.webView.allowsBackForwardNavigationGestures = YES;
 	
-	// update the title and URL automatically
+	// Update the title and URL automatically.
 	[self.webView addObserver:self
 				   forKeyPath:NSStringFromSelector(@selector(title))
 					  options:0
@@ -84,7 +84,7 @@ static const CGFloat kAddressHeight = 24.0f;
 		self.webView.scrollView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
 	}
 	
-	// Create the page title label
+	// Create the page title label.
 	UINavigationBar *navBar = self.navigationController.navigationBar;
 	CGRect labelFrame = CGRectMake(kMargin, kSpacer, navBar.bounds.size.width - 2*kMargin, kLabelHeight);
 	UILabel *label = [[UILabel alloc] initWithFrame:labelFrame];
@@ -95,7 +95,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	[navBar addSubview:label];
 	self.pageTitle = label;
 	
-	// load the saved URL, if any
+	// Load the saved URL, if any.
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	NSString *savedURL = [defaults stringForKey:@"savedURL"];
 	if (!savedURL || [savedURL isEqualToString:@""]) {
@@ -106,7 +106,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	#endif
 	}
 	
-	// create the address bar
+	// Create the address bar.
 	CGRect addressFrame = CGRectMake(kMargin, kSpacer * 2.0 + kLabelHeight, labelFrame.size.width, kAddressHeight);
 	UITextField *address = [[UITextField alloc] initWithFrame:addressFrame];
 	address.text = savedURL;
@@ -129,26 +129,26 @@ static const CGFloat kAddressHeight = 24.0f;
 	[navBar addSubview:address];
 	self.addressField = address;
 	
-	// spins when we send data to the watch
+	// Spins when we send data to the watch.
 	self.progressHUD = nil;
 	
-	// register for notifications to update the UI when the watch connects or disconnects
+	// Register for notifications to update the UI when the watch connects or disconnects.
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	self.watchConnectionObserver = [nc addObserverForName:STLAWatchConnectionStateChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
 		NSNumber *connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
 		self.sendToPebble.enabled = [connected boolValue];
 	}];
 	
-	// Start up by loading the Pebble Wikipedia page
+	// Start up by loading the Pebble Wikipedia page.
     [self loadRequestFromString:self.addressField.text];
 }
 
 - (void)dealloc {
-	// notification center
+	// Notification center.
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	[nc removeObserver:self.watchConnectionObserver];
 	self.watchConnectionObserver = nil;
-	// KVO
+	// KVO.
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(title))];
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(URL))];
 	[self.webView removeObserver:self forKeyPath:@"loading"];
@@ -183,22 +183,22 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (void)loadRequestFromString:(NSString *)urlString {
 	NSURL *url = [NSURL URLWithString:urlString];
-	// add http:// if necessary
+	// Add http:// if necessary.
 	if (!url.scheme) {
 		NSString *modifiedURLString = [NSString stringWithFormat:@"http://%@", url];
 		url = [NSURL URLWithString:modifiedURLString];
 	}
-//	// make sure the URL is reachable to check if we should perform a web search instead
+//	// Make sure the URL is reachable to check if we should perform a web search instead.
 //	if (url check) {
 //		<#statements#>
 //	}
-//	// if it's not a valid URL, do a web search instead
+//	// If it's not a valid URL, do a web search instead.
 //	if (!url) {
 //		NSString *escapedQuery = [urlString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 //		NSString *searchURL = [NSString stringWithFormat:@"https://google.com/search?q=%@", escapedQuery];
 //		url = [NSURL URLWithString:searchURL];
 //	}
-	// load the URL
+	// Load the URL.
 	if (url) {
 		NSURLRequest *urlRequest = [NSURLRequest requestWithURL:url];
 		[self.webView loadRequest:urlRequest];
@@ -229,19 +229,19 @@ static const CGFloat kAddressHeight = 24.0f;
 #pragma mark Watch Stuff
 
 - (IBAction)sendToPebble:(id)sender {
-	// Start a spinner so the user knows something's happening
+	// Start a spinner so the user knows something's happening.
 	self.progressHUD = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
 	self.progressHUD.labelText = NSLocalizedString(@"Sending...", nil);
-	self.progressHUD.minShowTime = 3; // keep the spinner onscreen for at least 3 seconds
+	self.progressHUD.minShowTime = 3;  // Keep the spinner onscreen for at least 3 seconds.
 	self.progressHUD.dimBackground = YES;
 	
 	void (^requestFailed)(NSString *errorMessage) = ^void(NSString *errorMessage) {
-		// make my life just a little easier
+		// Make my life just a little easier.
 		NSLog(@"Failed to get text for article at URL: %@", self.addressField.text);
 		
-		// hide the HUD
+		// Hide the HUD.
 		[self.progressHUD hide:YES];
-		// Tell the user that retrieval failed
+		// Tell the user that retrieval failed.
 		UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Error Retrieving Webpage", nil)
 																				 message:errorMessage ?: @""
 																		  preferredStyle:UIAlertControllerStyleAlert];
@@ -251,15 +251,15 @@ static const CGFloat kAddressHeight = 24.0f;
 		[self presentViewController:alertController animated:YES completion:nil];
 	};
 	
-	// turn the webpage into an array of words
+	// Turn the webpage into an array of words.
 	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
 	NSDictionary *requestParameters = @{ @"url": self.addressField.text,
 										 @"apikey": API_KEY,
 										 @"outputMode": @"json" };
 	[manager GET:API_URL parameters:requestParameters
 		 success:^(AFHTTPRequestOperation *operation, id responseObject) {
-			 // turn the responseObject into useful text
-			 if (![responseObject isKindOfClass:[NSDictionary class]]) { // safety check
+			 // Turn the responseObject into useful text.
+			 if (![responseObject isKindOfClass:[NSDictionary class]]) {  // Safety check.
 				 NSLog(@"Error: responseObject is not a dictionary.");
 				 requestFailed(NSLocalizedString(@"Stela's servers aren't able to turn this page into text right now. Please try again later.", nil));
 				 return;
@@ -267,7 +267,7 @@ static const CGFloat kAddressHeight = 24.0f;
 			 
 			 NSDictionary *responseDict = (NSDictionary *)responseObject;
 			 NSString *blockText = responseDict[@"text"];
-			 if (!blockText) { // safety check
+			 if (!blockText) {  // Safety check.
 				 NSLog(@"Error: couldn't get text from JSON response.");
 				 requestFailed(NSLocalizedString(@"Unable to get text from website. Stela doesn't work on PDFs, documents, or images.", nil));
 				 return;
@@ -276,12 +276,12 @@ static const CGFloat kAddressHeight = 24.0f;
 			 // This is an array of all the words on the page.
 			 NSArray *words = [blockText componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 			 
-			 // Send the words to the watch
+			 // Send the words to the watch.
 			 STLAMessenger *messenger = [STLAMessenger defaultMessenger];
 			 [messenger sendStringsToWatch:words completion:^(BOOL success) {
 				 if (success) {
 					 NSLog(@"Successfully sent words to the watch.");
-					 // hide the HUD
+					 // Hide the HUD.
 					 [self.progressHUD hide:YES];
 				 } else {
 					 NSLog(@"ERROR. Failed to send words to the watch.");
@@ -305,7 +305,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 	[self updateButtons];
 	
-	// save the new URL
+	// Save the new URL.
 	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
 	appDelegate.currentURL = [webView.URL absoluteString];
 	self.addressField.text = appDelegate.currentURL;
@@ -329,7 +329,7 @@ static const CGFloat kAddressHeight = 24.0f;
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation
 	  withError:(NSError *)error
 {
-//	// check if we were unable to load a web search as a URL
+//	// Check if we were unable to load a web search as a URL.
 //	if (error.code == -1003) {
 //		// A server with the specified hostname could not be found.
 //		NSURL *failingURL = error.userInfo[NSURLErrorFailingURLErrorKey];
@@ -337,7 +337,7 @@ static const CGFloat kAddressHeight = 24.0f;
 //		NSString *searchURL = [NSString stringWithFormat:@"https://google.com/search?q=%@", ]
 //	}
 	
-	// it's a real error
+	// It's a real error.
 	#if DEBUG
 		NSLog(@"%s Error: %@", __PRETTY_FUNCTION__, error);
 	#endif

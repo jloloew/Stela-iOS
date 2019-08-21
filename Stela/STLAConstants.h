@@ -3,7 +3,7 @@
 //  Stela
 //
 //  Created by Justin Loew on 1/5/15.
-//  Copyright (c) 2015 Justin Loew. All rights reserved.
+//  Copyright (c) 2015-2019 Justin Loew. All rights reserved.
 //
 
 #ifndef Stela_Constants_h
@@ -41,7 +41,7 @@ extern NSString * const kWatchConnectionStateChangeNotificationBoolKey;
 extern NSString * const stelaUUIDString;
 
 /// The maximum size of a message that a Pebble can send or receive, in bytes.
-extern NSUInteger const kPebbleMaxMessageSize; // actual max size is ~255, but I'll allow for overhead
+extern NSUInteger const kPebbleMaxMessageSize;  // Actual max size is ~255, but I'll allow for overhead.
 
 
 /// The keys used for sending messages between the watch and the phone.
@@ -111,7 +111,7 @@ typedef uint8_t		VERSION_MINOR_KEY_t;
 typedef uint8_t		VERSION_PATCH_KEY_t;
 typedef uint32_t	APPMESG_FIRST_WORD_t;
 
-/// Used for sending version numbers to and from the watch. Ex.: "1.0.31"
+/// Used for sending version numbers to and from the watch. Ex.: "1.0.31".
 typedef struct {
 	/// The major version number.
 	unsigned char major;

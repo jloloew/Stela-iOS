@@ -3,7 +3,7 @@
 //  Stela
 //
 //  Created by Justin Loew on 4/11/14.
-//  Copyright (c) 2014 Justin Loew. All rights reserved.
+//  Copyright (c) 2014-2019 Justin Loew. All rights reserved.
 //
 
 #import "STLAConstants.h"
@@ -12,9 +12,15 @@
 
 const static int sMaxTextChunkLength = 60;
 const static int sMaxWordLength = 8;
-//const static int sPebbleStorageCapacity = 50000;	// 50KB
+//const static int sPebbleStorageCapacity = 50000;  // 50KB
 
 static NSString *SAVED_URL_KEY = @"savedURL";
+
+/// The URL scheme used to open non-secure links in Stela.app.
+static NSString *STELA_URL_SCHEME = @"stela";
+
+/// The URL scheme used to open secure links in Stela.app.
+static NSString *STELAS_URL_SCHEME = @"stelas";
 
 
 @interface AppDelegate ()
@@ -34,7 +40,7 @@ static NSString *SAVED_URL_KEY = @"savedURL";
 /// Clean up a string for sending it to the watch.
 /// It takes a word and inserts "- " if it's too long to fit on the screen of the watch.
 ///
-/// @param chunk The word to clean up
+/// @param chunk The word to clean up.
 /// @return The clean word.
 + (NSString *)formatString:(NSString *)chunk;
 
@@ -44,7 +50,7 @@ static NSString *SAVED_URL_KEY = @"savedURL";
 
 @implementation AppDelegate
 
-// always keep the current URL saved in case of a crash
+// Always keep the current URL saved in case of a crash.
 - (void)setCurrentURL:(NSString *)currentURL {
 	_currentURL = currentURL;
 	
@@ -57,6 +63,7 @@ static NSString *SAVED_URL_KEY = @"savedURL";
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Set Stela's UI theme color.
 	self.window.tintColor = [UIColor blackColor];
 	
     return YES;
@@ -70,9 +77,10 @@ static NSString *SAVED_URL_KEY = @"savedURL";
 	if ([url isFileURL]) {
 		return NO;
 	}
-	// check if the URL starts with "stela://" (or "stelas://" for HTTPS)
-	if ([[url scheme] isEqualToString:@"stela"] || [[url scheme] isEqualToString:@"stelas"]) {
-		if ([[url host] isEqualToString:@""]) { // not a valid webpage
+	// Check if the URL starts with "stela://" (or "stelas://" for HTTPS).
+    NSString *urlScheme = [[url scheme] lowercaseString];
+	if ([urlScheme isEqualToString:STELA_URL_SCHEME] || [urlScheme isEqualToString:STELAS_URL_SCHEME]) {
+		if ([[url host] isEqualToString:@""]) {  // Not a valid webpage.
 			return NO;
 		}
 		
@@ -83,9 +91,8 @@ static NSString *SAVED_URL_KEY = @"savedURL";
 }
 
 
-// make sure we can open the URL passed in, if any.
-- (BOOL)application:(UIApplication *)application
-willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+// Make sure we can open the URL passed in, if any.
+- (BOOL)application:(UIApplication *)application willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
 	NSURL *url = [launchOptions valueForKey:UIApplicationLaunchOptionsURLKey];
 	if (url) {
@@ -107,17 +114,18 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 		return NO;
 	}
 	
-	// replace stela:// with http://
+	// Replace "stela://" with "http://".
 	NSString *urlString = [url absoluteString];
-	if ([[url scheme] isEqualToString:@"stelas"]) { // https
-		NSRange stelaRange = NSMakeRange(0, @"stelas".length);
-		urlString = [urlString stringByReplacingCharactersInRange:stelaRange
+    NSString *urlScheme = [[url scheme] lowercaseString];
+	if ([urlScheme isEqualToString:STELAS_URL_SCHEME]) {  // https
+		NSRange stelasSchemeRange = NSMakeRange(0, STELAS_URL_SCHEME.length);
+		urlString = [urlString stringByReplacingCharactersInRange:stelasSchemeRange
 													   withString:@"https"];
-	} else if ([[url scheme] isEqualToString:@"stela"]) { // http
-		NSRange stelaRange = NSMakeRange(0, @"stela".length);
-		urlString = [urlString stringByReplacingCharactersInRange:stelaRange
+	} else if ([urlScheme isEqualToString:STELA_URL_SCHEME]) {  // http
+		NSRange stelaSchemeRange = NSMakeRange(0, STELA_URL_SCHEME.length);
+		urlString = [urlString stringByReplacingCharactersInRange:stelaSchemeRange
 													   withString:@"http"];
-	} else { // unreachable
+	} else {  // Unreachable.
 		NSLog(@"%s:%d: %s: Unreachable code path reached!",
 			  __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		exit(EXIT_FAILURE);
@@ -155,11 +163,12 @@ willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 	if ([text length] <= sMaxWordLength) {
 		return text;
 	}
+    
 	static NSString *delimiterToBeInserted = @"- ";
-	NSString *result = [string substringToIndex:(sMaxWordLength - [delimiterToBeInserted length])];	// Cut it short so there's room for the "- "
-	NSRange range;
-	range.location = 0;
-	range.length = [result length];
+    // Cut it short so there's room for the "- ".
+	NSString *result = [string substringToIndex:(sMaxWordLength - [delimiterToBeInserted length])];
+    
+	NSRange range = NSMakeRange(0, [result length]);
 	while (range.location < [text length]) {
 		range.location += range.length;
 		range.length = MIN(sMaxWordLength - [delimiterToBeInserted length],

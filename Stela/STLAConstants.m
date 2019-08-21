@@ -3,7 +3,7 @@
 //  Stela
 //
 //  Created by Justin Loew on 1/30/15.
-//  Copyright (c) 2015 Justin Loew. All rights reserved.
+//  Copyright (c) 2015-2019 Justin Loew. All rights reserved.
 //
 
 @import Foundation;
@@ -43,7 +43,7 @@ Version stla_get_iOS_Stela_version() {
 	NSDictionary *infoDict = [[NSBundle mainBundle] infoDictionary];
 	NSString *verStr = infoDict[@"CFBundleShortVersionString"];
 	verStr = [NSString stringWithFormat:@"%@.%hhu",
-			  verStr, CURRENT_PATCH_VERSION]; // max version is 255, only use 8 bits
+			  verStr, CURRENT_PATCH_VERSION];  // Max version is 255, only use 8 bits.
 	return stla_string_to_version(verStr);
 }
 
@@ -68,14 +68,14 @@ Version stla_string_to_version(NSString *versionString) {
 	NSScanner *scanner = [NSScanner scannerWithString:versionString];
 	NSInteger digits[] = { -1, -1, -1 };
 	NSUInteger sizeOfDigits = sizeof(digits) / sizeof(*digits);
-	// scan in all the digits
+	// Scan in all the digits.
 	for (NSUInteger i = 0; i < sizeOfDigits; i++) {
 		if (![scanner scanInteger:&digits[i]]) {
-			return ver; // don't set the watch's version number without a valid value
+			return ver;  // Don't set the watch's version number without a valid value.
 		}
-		[scanner scanString:@"." intoString:nil]; // skip past the '.'
+		[scanner scanString:@"." intoString:nil];  // Skip past the '.'.
 	}
-	// set the version number
+	// Set the version number.
 	ver = (Version) { digits[0], digits[1], digits[2] };
 	return ver;
 }

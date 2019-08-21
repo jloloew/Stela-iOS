@@ -3,7 +3,7 @@
 //  Stela
 //
 //  Created by Justin Loew on 1/30/15.
-//  Copyright (c) 2015 Justin Loew. All rights reserved.
+//  Copyright (c) 2015-2019 Justin Loew. All rights reserved.
 //
 
 #import "STLAMessenger.h"
@@ -11,7 +11,7 @@
 
 
 /// The default block size (measured in words, not bytes).
-static NSUInteger const kDefaultBlockSize = 200; // in words, not bytes
+static NSUInteger const kDefaultBlockSize = 200;  // In words, not bytes.
 static NSString * const kSharedWordsFileName = @"sharedWords";
 
 
@@ -29,7 +29,7 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 - (instancetype)init {
 	self = [super init];
 	if (self) {
-		self.blockSize = kDefaultBlockSize; // in words, not bytes
+		self.blockSize = kDefaultBlockSize;  // In words, not bytes.
 	}
 	return self;
 }
@@ -38,28 +38,28 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 	NSAssert(self.blockSize != 0, @"%s:%d: The size of a block of text is zero.",
 			 __PRETTY_FUNCTION__, __LINE__);
 	
-	// check whether textBlocks is an array of arrays of words,
-	// or whether it's an array of words that needs to be blockified
+	// Check whether textBlocks is an array of arrays of words,
+	// or whether it's an array of words that needs to be blockified.
 	if (!textBlocks || textBlocks.count == 0) {
 		_textBlocks = nil;
-		// delete current text blocks from the watch
+		// Delete current text blocks from the watch.
 		[[STLAMessenger defaultMessenger] resetWatch];
 		return;
 	}
 	
-	NSMutableArray *allWords = [NSMutableArray array]; // this will be a 1-D array of all the words
+	NSMutableArray *allWords = [NSMutableArray array];  // This will be a 1-D array of all the words.
 	
 	if ([textBlocks[0] isKindOfClass:[NSArray class]]) {
-		// textBlocks is a 2-D array of words that must be reordered
-		// ObjC fast enumeration doesn't guarantee order, must use old school for loop
+		// textBlocks is a 2-D array of words that must be reordered.
+		// ObjC fast enumeration doesn't guarantee order, must use old school for loop.
 		for (NSUInteger i = 0; i < textBlocks.count; i++) {
 			NSArray *textBlock = textBlocks[i];
 			[allWords addObjectsFromArray:textBlock];
 		}
 	} else if ([textBlocks[0] isKindOfClass:[NSString class]]) {
-		// textBlocks is a 1-D array of words
+		// textBlocks is a 1-D array of words.
 		for (NSUInteger i = 0; i < textBlocks.count; i++) {
-			// make sure each "word" in allWords is actually a valid word
+			// Make sure each "word" in allWords is actually a valid word.
 			if ([textBlocks[i] isKindOfClass:[NSString class]]) {
 				if (![textBlocks[i] isEqualToString:@""]) {
 					[allWords addObject:textBlocks[i]];
@@ -72,20 +72,20 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 		return;
 	}
 	
-	// allWords is now a 1-D array of all the words to be put into blocks
+	// allWords is now a 1-D array of all the words to be put into blocks.
 	NSUInteger numBlocks = ((allWords.count - 1) / self.blockSize) + 1;
 	_textBlocks = [NSMutableArray arrayWithCapacity:numBlocks];
 	_textBlocks[0] = [NSMutableArray arrayWithCapacity:self.blockSize];
-	// fill the blocks
+	// Fill the blocks.
 	NSUInteger wordNum = 0, blockNum = 0, i = 0;
 	while (wordNum < allWords.count) {
-		// create new blocks as needed
+		// Create new blocks as needed.
 		if (i >= self.blockSize) {
 			i = 0;
 			blockNum++;
 			_textBlocks[blockNum] = [NSMutableArray arrayWithCapacity:self.blockSize];
 		}
-		// add the next word to the current block and increment the counters
+		// Add the next word to the current block and increment the counters.
 		_textBlocks[blockNum][i++] = allWords[wordNum++];
 	}
 	
@@ -100,13 +100,13 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 		   fromBlockAtIndex:(NSUInteger)blockIndex
 			fromWordAtIndex:(NSUInteger)wordIndex
 {
-	NSMutableArray *words = nil; ///< holds the words to get
+	NSMutableArray *words = nil;  ///< Holds the words to get.
 	
 	if (blockIndex < self.textBlocks.count) {
 		NSArray *textBlock = self.textBlocks[blockIndex];
 		if (wordIndex < textBlock.count) {
 			words = [NSMutableArray array];
-			NSUInteger currentSize = 0; ///< The size of all the words in @c words, in bytes.
+			NSUInteger currentSize = 0;  ///< The size of all the words in @c words, in bytes.
 			NSUInteger wIndex = wordIndex;
 			do {
 				NSString *word = textBlock[wIndex];
@@ -114,20 +114,20 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 				if (wordSize == 0) {
 					break;
 				} else {
-					wordSize += 1; // account for the string's NULL-terminator
+					wordSize += 1;  // Account for the string's NULL-terminator.
 				}
 				if (currentSize + wordSize > numBytes) {
-					// stop before the array gets too big
+					// Stop before the array gets too big.
 					break;
 				}
-				// add the word to the array
+				// Add the word to the array.
 				[words addObject:word];
 				currentSize += wordSize;
 			} while (++wIndex < textBlock.count);
 		}
 	}
 	
-	// return nil instead of an empty array
+	// Return nil instead of an empty array.
 	if (words.count == 0) {
 		words = nil;
 	}

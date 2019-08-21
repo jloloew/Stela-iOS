@@ -3,7 +3,7 @@
 //  Stela
 //
 //  Created by Justin Loew on 1/30/15.
-//  Copyright (c) 2015 Justin Loew. All rights reserved.
+//  Copyright (c) 2015-2019 Justin Loew. All rights reserved.
 //
 
 #import <PebbleKit/NSDictionary+Pebble.h>
@@ -134,17 +134,17 @@
 	
 	pebbleCentral.delegate = self;
 	
-	// Set the UUID of the app
+	// Set the UUID of the app.
 	uuid_t stelaUUIDBytes;
 	NSUUID *stelaUUID = [[NSUUID alloc] initWithUUIDString:stelaUUIDString];
 	[stelaUUID getUUIDBytes:stelaUUIDBytes];
 	NSData *UUIDData = [NSData dataWithBytes:stelaUUIDBytes length:sizeof(uuid_t)];
 	[pebbleCentral setAppUUID:UUIDData];
-	if (![pebbleCentral hasValidAppUUID]) { // safety check
+	if (![pebbleCentral hasValidAppUUID]) {  // Safety check.
 		NSLog(@"%s:%d: Our app UDID is invalid!", __PRETTY_FUNCTION__, __LINE__);
 	}
 	
-	// set our connected watch
+	// Set our connected watch.
 	if (pebbleCentral.lastConnectedWatch.isConnected) {
 		self.connectedWatch = pebbleCentral.lastConnectedWatch;
 	} else {
@@ -156,7 +156,7 @@
 			  __PRETTY_FUNCTION__, __LINE__, self.connectedWatch);
 	#endif
 	
-	// set the callback for incoming messages
+	// Set the callback for incoming messages.
 	[self.connectedWatch appMessagesAddReceiveUpdateHandler:^BOOL(PBWatch *watch,
 																  NSDictionary *update)
 	{
@@ -174,7 +174,7 @@
 		self.watchIsEmpty = YES;
 		self.watchVersion = stla_unknown_version_number;
 		
-		// push out a notification to reflect the new connection status
+		// Push out a notification to reflect the new connection status.
 		NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 		[nc postNotificationName:STLAWatchConnectionStateChangeNotification
 						  object:self.connectedWatch
@@ -185,9 +185,9 @@
 }
 
 - (void)resetWatch {
-	// don't send simultaneous reset commands
+	// Don't send simultaneous reset commands.
 	static BOOL _resetInProgress = NO;
-	BOOL *resetInProgress = &_resetInProgress; // needed for the block
+	BOOL *resetInProgress = &_resetInProgress; // Needed for the block.
 	
 	if (!_resetInProgress) {
 		_resetInProgress = YES;
@@ -210,7 +210,7 @@
 - (void)sendStringsToWatch:(NSArray *)words
 				completion:(void (^)(BOOL success))handler
 {
-	// safety check
+	// Safety check.
 	if (!words || words.count == 0) {
 		if (handler) {
 			handler(YES);
@@ -218,26 +218,26 @@
 		return;
 	}
 	
-	// check for a connected Pebble
+	// Check for a connected Pebble.
 	if (self.connectedWatch) {
-		// Pebble is connected
+		// Pebble is connected.
 		#if DEBUG
 			NSLog(@"Sending to Pebble (%@)", self.connectedWatch);
 		#endif
 		
 		STLAWordManager *wordManager = [STLAWordManager defaultManager];
 		
-		// divide up the words into blocks
+		// Divide up the words into blocks.
 		[wordManager setTextBlocks:(NSMutableArray *)words];
 		
 		[self resetWatch];
 		
-		// tell the watch the total number of blocks and the block size
+		// Tell the watch the total number of blocks and the block size.
 		NSDictionary *message = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY): @(wordManager.textBlocks.count),
 								  @(TEXT_BLOCK_SIZE_KEY): @(wordManager.blockSize)};
 		[self sendMessage:message completion:nil];
 		
-		// send the first block to the watch
+		// Send the first block to the watch.
 		[self sendBlockAtIndex:0 completion:^(BOOL success) {
 			if (success) {
 				#if DEBUG
@@ -251,13 +251,13 @@
 					  __PRETTY_FUNCTION__, __LINE__);
 			}
 			
-			// call our caller's handler
+			// Call our caller's handler.
 			if (handler) {
 				handler(success);
 			}
 		}];
 	} else {
-		// no Pebble connected
+		// No Pebble connected.
 		handler(NO);
 	}
 }
@@ -266,13 +266,13 @@
 
 - (NSDictionary *)prepareDictionaryForAppMessage:(NSDictionary *)dictionary
 {
-	NSMutableDictionary *dict = [NSMutableDictionary dictionary]; ///< Output dictionary
+	NSMutableDictionary *dict = [NSMutableDictionary dictionary];  ///< Output dictionary
 	for (id key in dictionary) {
 		if ([key isKindOfClass:[NSNumber class]]) {
-			// convert the key
+			// Convert the key.
 			NSInteger intKey = [key integerValue];
 			NSNumber *keyForPebble = [NSNumber numberWithInt32:(int32_t)intKey];
-			// convert the value
+			// Convert the value.
 			id value = dictionary[key];
 			if ([value isKindOfClass:[NSNumber class]]) {
 				NSNumber *newValue = [NSNumber numberWithInt32:(int32_t)[value integerValue]];
@@ -302,10 +302,10 @@
 			  __PRETTY_FUNCTION__, __LINE__);
 	}
 	
-	// validate the message before sending it
+	// Validate the message before sending it.
 //	message = [self prepareDictionaryForAppMessage:message];
 	
-	// communication with the watch must be done on the main thread
+	// Communication with the watch must be done on the main thread.
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self.connectedWatch appMessagesPushUpdate:message onSent:handler];
 	});
@@ -318,14 +318,14 @@
 	NSAssert(_blockIndex < wordManager.textBlocks.count, @"%s:%d: Block index out of range (max %lu, actual %lu)",
 			 __PRETTY_FUNCTION__, __LINE__, (unsigned long)wordManager.textBlocks.count, (unsigned long)_blockIndex);
 	
-	// create copies of the parameters with block scope storage
-	NSUInteger const blockIndex = _blockIndex; // (ObjC block syntax)-safe index of the (text block) to send
+	// Create copies of the parameters with block scope storage.
+	NSUInteger const blockIndex = _blockIndex;  // (ObjC block syntax)-safe index of the (text block) to send.
 	NSArray *__weak textBlock = wordManager.textBlocks[blockIndex];
 	
 	// Create blocks to send to Pebble methods as callbacks.
 	// Declare the blocks up front. This is kind of like a file within a file, huh?
 	
-	// silence warnings about @params on blocks
+	// Silence warnings about @params on blocks.
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wdocumentation"
 	
@@ -348,23 +348,23 @@
 	#pragma clang diagnostic pop
 	
 	
-	__block NSUInteger messagesSent = 0; ///< How many messages we've sent successfully.
-	__block NSUInteger errorCount = 0; ///< How many errors we've encountered in the course of sending messages so far
-	__block NSUInteger wordNum = 0; ///< The index of the last sent word in the block.
+	__block NSUInteger messagesSent = 0;  ///< How many messages we've sent successfully.
+	__block NSUInteger errorCount = 0;  ///< How many errors we've encountered in the course of sending messages so far.
+	__block NSUInteger wordNum = 0;  ///< The index of the last sent word in the block.
 	__block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
 	sendNextWords = strongBlock = ^void(PBWatch *watch,
 										NSDictionary *update,
 										NSError *error)
 	{
 		if (wordNum >= textBlock.count) {
-			// no words left to send
+			// No words left to send.
 			if (handler) {
 				handler(YES);
 			}
 			return;
 		}
 		
-		// check if we're receiving nothing but errors
+		// Check if we're receiving nothing but errors.
 		NSUInteger const minErrorsBeforeFailure = 10;
 		double const maxErrorRate = 0.25;
 		if (errorCount >= minErrorsBeforeFailure && (1.0 * errorCount / messagesSent) > maxErrorRate) {
@@ -375,21 +375,21 @@
 			return;
 		}
 		
-		// check for an error while sending the previous words
+		// Check for an error while sending the previous words.
 		if (error) {
-			// an error occurred, retry sending the same dict
+			// An error occurred, retry sending the same dict.
 			NSLog(@"%s:%d: Error while sending words: %@. Retrying send.",
 				  __PRETTY_FUNCTION__, __LINE__, error);
 			errorCount++;
 			[self sendMessage:dict completion:sendNextWords];
 		} else {
-			// no error found, send a new dictionary
+			// No error found, send a new dictionary.
 			messagesSent++;
-			// create the dictionary of words to send
+			// Create the dictionary of words to send.
 			NSArray *words = [[STLAWordManager defaultManager] getWordsOfSize:kPebbleMaxMessageSize
 															 fromBlockAtIndex:blockIndex
 															  fromWordAtIndex:wordNum];
-			if (!words) { // safety check
+			if (!words) {  // Safety check.
 				#if DEBUG
 					NSLog(@"%s:%d: An error occurred while retrieving the next words to send.",
 						  __PRETTY_FUNCTION__, __LINE__);
@@ -400,27 +400,27 @@
 				return;
 			}
 			
-			// base dictionary
+			// Base dictionary.
 			dict = [NSMutableDictionary dictionaryWithDictionary:@{@(APPMESG_BLOCK_NUMBER_KEY):		@(blockIndex),
 																   @(APPMESG_WORD_START_INDEX_KEY):	@(wordNum),
 																   @(APPMESG_NUM_WORDS_KEY):		@(words.count),
 																   @(APPMESG_FIRST_WORD_KEY):		@(APPMESG_FIRST_WORD)}];
-			// add the words to the dictionary
+			// Add the words to the dictionary.
 			for (NSUInteger i = 0; i < words.count; i++) {
 				dict[@(APPMESG_FIRST_WORD + i)] = words[i];
 			}
 			
 			#if DEBUG
-				// log the size of the dictionary we're trying to send
+				// Log the size of the dictionary we're trying to send.
 				NSData *data = [dict pebbleDictionaryData:nil];
 				NSLog(@"%s:%d: sending message %lu containing a dictionary with size %lu and contents: %@",
 					  __PRETTY_FUNCTION__, __LINE__, (unsigned long)messagesSent, (unsigned long)data.length, dict);
 			#endif
 			
-			// send the dictionary
+			// Send the dictionary.
 			[self sendMessage:dict completion:sendNextWords];
 			
-			// update wordNum
+			// Update wordNum.
 			wordNum += words.count;
 		}
 	};
@@ -435,7 +435,7 @@
 			return;
 		}
 		
-		// send the strings to the watch
+		// Send the strings to the watch.
 		sendNextWords(watch, dict, nil);
 	};
 	
@@ -449,14 +449,14 @@
 			return;
 		}
 		
-		// launch the watch app
+		// Launch the watch app.
 		[watch appMessagesLaunch:watchAppLaunchedCallback];
 	};
 	
 	
 	// Enough blocks, let's actually run some code.
 	
-	// check whether we're connected to a watch
+	// Check whether we're connected to a watch.
 	if (!self.connectedWatch) {
 		NSLog(@"%s:%d: No connected watch.", __PRETTY_FUNCTION__, __LINE__);
 		if (handler) {
@@ -473,7 +473,7 @@
 		}
 		return;
 	}
-	// a watch is connected
+	// A watch is connected.
 	[self.connectedWatch appMessagesGetIsSupported:appMessagesSupportedCallback];
 }
 
@@ -501,7 +501,7 @@
 	
 	id value;
 	
-	// check for an error
+	// Check for an error.
 	value = message[@(ERROR_KEY)];
 	if (value) {
 		if ([value isKindOfClass:[NSString class]]) {
@@ -513,7 +513,7 @@
 		return;
 	}
 	
-	// check for a version number
+	// Check for a version number.
 	value = message[@(VERSION_MAJOR_KEY)];
 	if (value) {
 		if ([message[@(VERSION_MAJOR_KEY)] isKindOfClass:[NSNumber class]] &&
@@ -529,7 +529,7 @@
 		return;
 	}
 	
-	// check for a message with the watch's block size
+	// Check for a message with the watch's block size.
 	value = message[@(TEXT_BLOCK_SIZE_KEY)];
 	if (value) {
 		if ([value isKindOfClass:[NSNumber class]]) {
@@ -542,7 +542,7 @@
 		return;
 	}
 	
-	// check for a request for the total number of blocks
+	// Check for a request for the total number of blocks.
 	value = message[@(TOTAL_NUMBER_OF_BLOCKS_KEY)];
 	if (value) {
 		if ([value isKindOfClass:[NSNumber class]]) {
@@ -555,7 +555,7 @@
 		return;
 	}
 	
-	// check for a request for another block to be sent over
+	// Check for a request for another block to be sent over.
 	value = message[@(APPMESG_BLOCK_NUMBER_KEY)];
 	if (value) {
 		if ([value isKindOfClass:[NSNumber class]]) {
@@ -568,7 +568,7 @@
 		return;
 	}
 	
-	// no valid keys found, now we just get info for debugging
+	// No valid keys found, now we just get info for debugging
 	NSLog(@"%s:%d: No valid keys found! All received keys: %@",
 		  __PRETTY_FUNCTION__, __LINE__, message.allKeys);
 }
@@ -578,7 +578,7 @@
 - (void)receiveBlockCount:(NSNumber *)blockCount {
 	#pragma unused(blockCount)
 	STLAWordManager *wordManager = [STLAWordManager defaultManager];
-	// send a message containing the total number of blocks back to the watch
+	// Send a message containing the total number of blocks back to the watch.
 	NSDictionary *blockCountMessage = @{@(TOTAL_NUMBER_OF_BLOCKS_KEY):
 											@(-wordManager.textBlocks.count)};
 	[self sendMessage:blockCountMessage completion:nil];
@@ -601,14 +601,14 @@
 - (void)receiveBlockSize:(NSNumber *)blockSize {
 	NSInteger size = [blockSize integerValue];
 	STLAWordManager *wordManager = [STLAWordManager defaultManager];
-	// if the new number is positive, set the max block size
+	// If the new number is positive, set the max block size.
 	if (size > 0) {
-		// re-blockify the existing blocks
+		// Re-blockify the existing blocks.
 		wordManager.blockSize = size;
 		[wordManager setTextBlocks:wordManager.textBlocks];
 	}
 	
-	// send a message containing the max block size back to the watch
+	// Send a message containing the max block size back to the watch.
 	NSDictionary *blockSizeMessage = @{@(TEXT_BLOCK_SIZE_KEY):
 										   @(-wordManager.blockSize)};
 	[self sendMessage:blockSizeMessage completion:nil];
@@ -652,21 +652,21 @@
 	
 	self.connectedWatch = watch;
 	
-	// declare a block here to minimize nesting
+	// Declare a block here to minimize nesting.
 	void (^appMessagesSupportedCallback)(PBWatch *watch, BOOL isAppMessagesSupported);
 	appMessagesSupportedCallback = ^(PBWatch *watch, BOOL isAppMessagesSupported) {
 		if (isAppMessagesSupported) {
-			// send our version number to the watch
+			// Send our version number to the watch.
 			[self sendVersionWithCompletion:^(PBWatch *__unused watch,
 											  NSDictionary *__unused update,
 											  NSError *__unused error) {
-				// send a request to the watch to send its version number over
+				// Send a request to the watch to send its version number over.
 				[self sendVersion:stla_unknown_version_number
 					   completion:^(PBWatch *watch,
 									NSDictionary *__unused update,
 									NSError *__unused error)
 				 {
-					 // push out a notification to reflect the new connection status
+					 // Push out a notification to reflect the new connection status.
 					 NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 					 [nc postNotificationName:STLAWatchConnectionStateChangeNotification
 									   object:watch
@@ -679,8 +679,8 @@
 		}
 	};
 	
-	// query the watch for version and compatibility info
-	// these calls must be done on the main thread
+	// Query the watch for version and compatibility info.
+	// These calls must be done on the main thread.
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[watch appMessagesGetIsSupported:appMessagesSupportedCallback];
 	});

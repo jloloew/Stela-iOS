@@ -2,7 +2,7 @@
 //  JLUtils.h
 //
 //  Created by Justin Loew on 3/13/15.
-//  Copyright (c) 2015 Justin Loew. All rights reserved.
+//  Copyright (c) 2015-2019 Justin Loew. All rights reserved.
 //
 
 #ifndef JLUtils_h
@@ -12,16 +12,16 @@
 #ifndef JL_DEBUG_DEFINED
 #define JL_DEBUG_DEFINED
 
-// Enable or disable this whole system
+// Enable or disable this whole system.
 #define JL_DEBUG_ENABLED 1
 
-// What to add to the logging messages
+// What to add to the logging messages.
 #define JL_ADD_FILE_TO_LOGS			0
 #define JL_ADD_FUNC_TO_LOGS			1
 #define JL_ADD_LINE_TO_LOGS			1
 #define JL_ADD_LOG_LEVEL_TO_LOGS	0
 
-// Select log levels to enable
+// Select log levels to enable.
 #define JL_ENABLE_LOG_LEVEL_ALL			1
 #define JL_ENABLE_LOG_LEVEL_ERROR		(1 && JL_ENABLE_LOG_LEVEL_ALL)
 #define JL_ENABLE_LOG_LEVEL_WARNING		(1 && JL_ENABLE_LOG_LEVEL_ERROR)
@@ -31,7 +31,7 @@
 
 #define JL_IF_DEBUG if (JL_DEBUG_ENABLED)
 
-// Define the logging verbosity levels
+// Define the logging verbosity levels.
 #define JL_LOG_LEVEL_ERROR		1
 #define JL_LOG_LEVEL_WARNING	2
 #define JL_LOG_LEVEL_INFO		3
@@ -102,7 +102,7 @@
 #define JL_ADD_LOG_LEVEL(level, fmt, ...) JL_ADD_LOG_LEVEL2(level, fmt , ##__VA_ARGS__)
 
 
-// Add a space to the beginning of the format string if we're going to be adding any extra information
+// Add a space to the beginning of the format string if we're going to be adding any extra information.
 #if JL_ADD_FILE_TO_LOGS || JL_ADD_FUNC_TO_LOGS || JL_ADD_LINE_TO_LOGS || JL_ADD_LOG_LEVEL_TO_LOGS
 	#define JL_AUGMENT_FORMAT_STRING2(level, fmt, ...) JL_ADD_LOG_LEVEL(level, " " fmt , ##__VA_ARGS__)
 #else
