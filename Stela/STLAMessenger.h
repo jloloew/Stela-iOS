@@ -3,10 +3,11 @@
 //  Stela
 //
 //  Created by Justin Loew on 1/30/15.
-//  Copyright (c) 2015 Justin Loew. All rights reserved.
+//  Copyright (c) 2015-2019 Justin Loew. All rights reserved.
 //
 
 @import Foundation;
+
 #import <PebbleKit/PebbleKit.h>
 
 

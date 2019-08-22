@@ -6,8 +6,9 @@
 //  Copyright (c) 2015-2019 Justin Loew. All rights reserved.
 //
 
-#import "STLAConstants.h"
 @import Foundation;
+
+#import "STLAConstants.h"
 
 
 #pragma mark - STLAWatch Protocol

@@ -8,6 +8,7 @@
 
 #import <PebbleKit/NSDictionary+Pebble.h>
 #import <PebbleKit/NSNumber+stdint.h>
+
 #import "STLAConstants.h"
 #import "STLAWordManager.h"
 #import "STLAMessenger.h"

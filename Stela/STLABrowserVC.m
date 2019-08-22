@@ -15,9 +15,9 @@
 
 #import "AppDelegate.h"
 #import "JLUtils.h"
-#import "STLABrowserVC.h"
 #import "STLAConstants.h"
 #import "STLAMessenger.h"
+#import "STLABrowserVC.h"
 
 
 __unused static const CGFloat kNavBarHeight = 52.0f;
