@@ -133,23 +133,35 @@ static const CGFloat kAddressHeight = 24.0f;
 	
 	// Spins when we send data to the watch.
 	self.progressHUD = nil;
-	
-	// Register for notifications to update the UI when the watch connects or disconnects.
-	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-	self.watchConnectionObserver = [nc addObserverForName:STLAWatchConnectionStateChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
-		NSNumber *connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
-		self.sendToPebble.enabled = [connected boolValue];
-	}];
+    
+    // This will be set up later in -viewDidAppear:.
+    self.watchConnectionObserver = nil;
 	
 	// Start up by loading the Pebble Wikipedia page.
     [self loadRequestFromString:self.addressField.text];
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    // Register for notifications to update the UI when the watch connects or disconnects.
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    self.watchConnectionObserver = [nc addObserverForName:STLAWatchConnectionStateChangeNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
+        NSNumber *connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
+        self.sendToPebble.enabled = [connected boolValue];
+    }];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    // Notification center.
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    [nc removeObserver:self.watchConnectionObserver];
+    self.watchConnectionObserver = nil;
+    
+    [super viewWillDisappear:animated];
+}
+
 - (void)dealloc {
-	// Notification center.
-	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-	[nc removeObserver:self.watchConnectionObserver];
-	self.watchConnectionObserver = nil;
 	// KVO.
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(title))];
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(URL))];
