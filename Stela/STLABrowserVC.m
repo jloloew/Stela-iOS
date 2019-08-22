@@ -27,6 +27,12 @@ static const CGFloat kSpacer = 2.0f;
 static const CGFloat kLabelFontSize = 12.0f;
 static const CGFloat kAddressHeight = 24.0f;
 
+typedef NSUInteger AppUpdateVersionNumber;
+__unused static const AppUpdateVersionNumber kNullAppVersion = 0;
+static const AppUpdateVersionNumber kCurrentAppVersion = 1;
+static const AppUpdateVersionNumber kReplacementAppVersion = 2;
+static NSString *const kMostRecentIgnoredUpdateVersionNumberKey = @"most recently ignored update version number";
+
 
 @interface STLABrowserViewController () <UIGestureRecognizerDelegate, WKNavigationDelegate>
 
@@ -43,6 +49,11 @@ static const CGFloat kAddressHeight = 24.0f;
 @property (strong, nonatomic) MBProgressHUD *progressHUD;
 
 @property (strong, nonatomic) id<NSObject> watchConnectionObserver;
+
+@property (nonatomic) BOOL hasPresentedAppListingMigrationPromptSinceAppLaunch;
+
+- (BOOL)shouldPresentAppListingMigrationPromptForUpdateVersion:(AppUpdateVersionNumber)updateVersion;
+- (void)presentAppListingMigrationPromptForUpdateVersion:(AppUpdateVersionNumber)updateVersion;
 
 - (void)browseForward:(UIScreenEdgePanGestureRecognizer *)recognizer;
 - (void)browseBack:(UIScreenEdgePanGestureRecognizer *)recognizer;
@@ -136,9 +147,16 @@ static const CGFloat kAddressHeight = 24.0f;
     
     // This will be set up later in -viewDidAppear:.
     self.watchConnectionObserver = nil;
+    
+    self.hasPresentedAppListingMigrationPromptSinceAppLaunch = NO;
 	
 	// Start up by loading the Pebble Wikipedia page.
     [self loadRequestFromString:self.addressField.text];
+    
+    
+    #ifdef DEBUG
+    // [defaults removeObjectForKey:kMostRecentIgnoredUpdateVersionNumberKey];
+    #endif
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -150,6 +168,11 @@ static const CGFloat kAddressHeight = 24.0f;
         NSNumber *connected = note.userInfo[kWatchConnectionStateChangeNotificationBoolKey];
         self.sendToPebble.enabled = [connected boolValue];
     }];
+    
+    // Prompt to update to a newer version of this app, if necessary.
+    if ([self shouldPresentAppListingMigrationPromptForUpdateVersion:kReplacementAppVersion]) {
+        [self presentAppListingMigrationPromptForUpdateVersion:kReplacementAppVersion];
+    }
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -166,6 +189,54 @@ static const CGFloat kAddressHeight = 24.0f;
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(title))];
 	[self.webView removeObserver:self forKeyPath:NSStringFromSelector(@selector(URL))];
 	[self.webView removeObserver:self forKeyPath:@"loading"];
+}
+
+#pragma mark App Migration Stuff
+
+- (BOOL)shouldPresentAppListingMigrationPromptForUpdateVersion:(AppUpdateVersionNumber)updateVersion {
+    if (self.hasPresentedAppListingMigrationPromptSinceAppLaunch) {
+        return NO;
+    }
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSNumber *lastIgnoredUpdateVersion = [defaults objectForKey:kMostRecentIgnoredUpdateVersionNumberKey];
+    AppUpdateVersionNumber lastVersionForWhichWeShouldNotPrompt = MAX([lastIgnoredUpdateVersion unsignedIntegerValue], kCurrentAppVersion);
+    // Only present the prompt if we'd be prompting for a newer version than the most recent ignored version.
+    return updateVersion > lastVersionForWhichWeShouldNotPrompt;
+}
+
+- (void)presentAppListingMigrationPromptForUpdateVersion:(AppUpdateVersionNumber)updateVersion {
+    UIAlertController *__block alertController = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Update Available", nil)
+                                                                             message:NSLocalizedString(@"An update to this app is available in the App Store.", nil)
+                                                                      preferredStyle:UIAlertControllerStyleAlert];
+    
+    // Add a "Learn More" action.
+    UIAlertAction *learnMoreAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Learn More", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction *_Nonnull action) {
+        // Show a sheet to explain the transition to the user and provide a link to the new version of the app.
+        // The next time this app is launched, this prompt will appear again.
+        [self performSegueWithIdentifier:@"showMigrationEducation" sender:self];
+    }];
+    [alertController addAction:learnMoreAction];
+    
+    // Add a "Remind Me Later" action.
+    UIAlertAction *remindMeLaterAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Remind Me Later", nil) style:UIAlertActionStyleCancel handler:^(UIAlertAction *_Nonnull action) {
+        // If we've previously recorded that we should never prompt for a certain previous update, leave that record as-is. This means that the next time the app is launched, this prompt will appear again because this update is newer than the last ignored update.
+        // Do nothing.
+    }];
+    [alertController addAction:remindMeLaterAction];
+    // [alertController setPreferredAction:remindMeLaterAction];
+    
+    // Add a "Don't Show Again" action.
+    UIAlertAction *dontShowAgainAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Don't Show Again", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction *_Nonnull action) {
+        // Record that we shouldn't prompt for this update again, then dismiss the alert.
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:[NSNumber numberWithUnsignedInteger:updateVersion]
+                     forKey:kMostRecentIgnoredUpdateVersionNumberKey];
+    }];
+    [alertController addAction:dontShowAgainAction];
+    
+    [self presentViewController:alertController animated:YES completion:^{}];
+    self.hasPresentedAppListingMigrationPromptSinceAppLaunch = YES;
 }
 
 #pragma mark Browser Stuff

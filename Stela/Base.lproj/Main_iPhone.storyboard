@@ -60,6 +60,7 @@
                         <outlet property="refresh" destination="kA6-ou-E2s" id="nDS-fe-EnD"/>
                         <outlet property="sendToPebble" destination="ABn-b8-fuF" id="be4-mh-zsI"/>
                         <outlet property="stop" destination="hEZ-nu-SSL" id="DhI-F5-mwH"/>
+                        <segue destination="7xL-t8-F9t" kind="showDetail" identifier="showMigrationEducation" id="HRy-fo-wLp"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
@@ -74,7 +75,7 @@
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
                     <size key="freeformSize" width="600" height="600"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="ojg-rW-CFm">
-                        <rect key="frame" x="0.0" y="20" width="600" height="44"/>
+                        <rect key="frame" x="0.0" y="20" width="600" height="50"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -89,6 +90,91 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="4uI-fW-vNl" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="658.125" y="86.619718309859152"/>
+        </scene>
+        <!--Update Available-->
+        <scene sceneID="Qxq-jp-0Gi">
+            <objects>
+                <viewController modalPresentationStyle="formSheet" id="ejF-nj-kD5" customClass="STLAMigrationEducationViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="lCQ-bD-HQC"/>
+                        <viewControllerLayoutGuide type="bottom" id="1id-z8-CoX"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" layoutMarginsFollowReadableWidth="YES" id="DC7-gJ-Pdz">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" layoutMarginsFollowReadableWidth="YES" directionalLockEnabled="YES" alwaysBounceVertical="YES" keyboardDismissMode="interactive" editable="NO" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AME-0c-QVv">
+                                <rect key="frame" x="0.0" y="72" width="600" height="482"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <string key="text">A newer version of this app is available in the App Store. Unfortunately, the newer version is listed as a different app in the App Store. This means that you'll need to download the newer version manually; this app cannot be automatically updated due to technical limitations.
+
+
+Why? What's so special about this update?
+
+Stela is being rebranded as "". As part of the rebrand, a new App Store listing has been created.
+
+
+Will Stela continue to work if I choose not to download the newer version?
+
+Yes. This version of Stela should continue to function as it always has. It just won't be able to receive automatic updates going forward.
+
+
+I have a question that's not answered here.
+
+Please feel free to reach out to the developer. I hear he's friendly!</string>
+                                <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <button opaque="NO" contentMode="scaleToFill" semanticContentAttribute="spatial" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="wordWrap" translatesAutoresizingMaskIntoConstraints="NO" id="SBd-MD-mcu">
+                                <rect key="frame" x="221.5" y="562" width="157" height="30"/>
+                                <state key="normal" title="View  on the App Store"/>
+                                <connections>
+                                    <action selector="viewOnAppStoreButtonTapped:" destination="ejF-nj-kD5" eventType="touchUpInside" id="9Fn-3b-2Tw"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="SBd-MD-mcu" firstAttribute="centerX" secondItem="DC7-gJ-Pdz" secondAttribute="centerX" id="1b0-E1-cNT"/>
+                            <constraint firstItem="AME-0c-QVv" firstAttribute="leading" secondItem="DC7-gJ-Pdz" secondAttribute="leading" id="DaL-Sf-UTj"/>
+                            <constraint firstItem="SBd-MD-mcu" firstAttribute="top" secondItem="AME-0c-QVv" secondAttribute="bottom" constant="8" symbolic="YES" id="Ke8-Ko-kre"/>
+                            <constraint firstItem="1id-z8-CoX" firstAttribute="top" secondItem="SBd-MD-mcu" secondAttribute="bottom" constant="8" symbolic="YES" id="P9V-Kp-Cmn"/>
+                            <constraint firstItem="AME-0c-QVv" firstAttribute="centerX" secondItem="DC7-gJ-Pdz" secondAttribute="centerX" id="g5b-H7-Cj3"/>
+                            <constraint firstItem="AME-0c-QVv" firstAttribute="top" secondItem="lCQ-bD-HQC" secondAttribute="bottom" constant="8" symbolic="YES" id="zSf-ci-Hbc"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Update Available" id="Ilo-UG-SZZ">
+                        <barButtonItem key="rightBarButtonItem" style="done" systemItem="done" id="O1K-bU-UPH">
+                            <connections>
+                                <action selector="doneButtonTapped:" destination="ejF-nj-kD5" id="9C9-e2-uWK"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="explanationTextView" destination="AME-0c-QVv" id="E99-8g-hd7"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="TFO-m7-j3f" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="4716" y="85"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="ACM-Pe-iOM">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="7xL-t8-F9t" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="MC6-Xi-dvF">
+                        <rect key="frame" x="0.0" y="20" width="600" height="50"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="ejF-nj-kD5" kind="relationship" relationship="rootViewController" id="Zgz-sp-uOZ"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Rz0-fx-3HO" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3324.375" y="85"/>
         </scene>
     </scenes>
 </document>
