@@ -14,13 +14,13 @@ const static int sMaxTextChunkLength = 60;
 const static int sMaxWordLength = 8;
 //const static int sPebbleStorageCapacity = 50000;  // 50KB
 
-static NSString *SAVED_URL_KEY = @"savedURL";
+NSString *const kSTLASavedURLKey = @"savedURL";
 
 /// The URL scheme used to open non-secure links in Stela.app.
-static NSString *STELA_URL_SCHEME = @"stela";
+static NSString *kSTLAProprietaryInsecureURLScheme = @"stela";
 
 /// The URL scheme used to open secure links in Stela.app.
-static NSString *STELAS_URL_SCHEME = @"stelas";
+static NSString *kSTLAProprietarySecureURLScheme = @"stelas";
 
 
 @interface AppDelegate ()
@@ -47,7 +47,6 @@ static NSString *STELAS_URL_SCHEME = @"stelas";
 @end
 
 
-
 @implementation AppDelegate
 
 // Always keep the current URL saved in case of a crash.
@@ -55,7 +54,7 @@ static NSString *STELAS_URL_SCHEME = @"stelas";
 	_currentURL = currentURL;
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	[defaults setObject:currentURL forKey:SAVED_URL_KEY];
+	[defaults setObject:currentURL forKey:kSTLASavedURLKey];
 }
 
 
@@ -79,7 +78,7 @@ static NSString *STELAS_URL_SCHEME = @"stelas";
 	}
 	// Check if the URL starts with "stela://" (or "stelas://" for HTTPS).
     NSString *urlScheme = [[url scheme] lowercaseString];
-	if ([urlScheme isEqualToString:STELA_URL_SCHEME] || [urlScheme isEqualToString:STELAS_URL_SCHEME]) {
+	if ([urlScheme isEqualToString:kSTLAProprietaryInsecureURLScheme] || [urlScheme isEqualToString:kSTLAProprietarySecureURLScheme]) {
 		if ([[url host] isEqualToString:@""]) {  // Not a valid webpage.
 			return NO;
 		}
@@ -117,12 +116,12 @@ static NSString *STELAS_URL_SCHEME = @"stelas";
 	// Replace "stela://" with "http://".
 	NSString *urlString = [url absoluteString];
     NSString *urlScheme = [[url scheme] lowercaseString];
-	if ([urlScheme isEqualToString:STELAS_URL_SCHEME]) {  // https
-		NSRange stelasSchemeRange = NSMakeRange(0, STELAS_URL_SCHEME.length);
+	if ([urlScheme isEqualToString:kSTLAProprietarySecureURLScheme]) {  // https
+		NSRange stelasSchemeRange = NSMakeRange(0, kSTLAProprietarySecureURLScheme.length);
 		urlString = [urlString stringByReplacingCharactersInRange:stelasSchemeRange
 													   withString:@"https"];
-	} else if ([urlScheme isEqualToString:STELA_URL_SCHEME]) {  // http
-		NSRange stelaSchemeRange = NSMakeRange(0, STELA_URL_SCHEME.length);
+	} else if ([urlScheme isEqualToString:kSTLAProprietaryInsecureURLScheme]) {  // http
+		NSRange stelaSchemeRange = NSMakeRange(0, kSTLAProprietaryInsecureURLScheme.length);
 		urlString = [urlString stringByReplacingCharactersInRange:stelaSchemeRange
 													   withString:@"http"];
 	} else {  // Unreachable.

@@ -20,9 +20,10 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 + (STLAWordManager *)defaultManager
 {
 	static STLAWordManager *_defaultManager = nil;
-	if (!_defaultManager) {
-		_defaultManager = [[STLAWordManager alloc] init];
-	}
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _defaultManager = [[STLAWordManager alloc] init];
+    });
 	return _defaultManager;
 }
 
@@ -35,7 +36,7 @@ static NSString * const kSharedWordsFileName = @"sharedWords";
 }
 
 - (void)setTextBlocks:(NSMutableArray *)textBlocks {
-	NSAssert(self.blockSize != 0, @"%s:%d: The size of a block of text is zero.",
+	NSAssert(self.blockSize != 0, @"%s:%d: The size of a block of text should not be zero.",
 			 __PRETTY_FUNCTION__, __LINE__);
 	
 	// Check whether textBlocks is an array of arrays of words,

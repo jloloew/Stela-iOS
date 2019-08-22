@@ -127,7 +127,7 @@ extern Version const stla_unknown_version_number;
 /// Gets the current version of the Stela iOS app.
 ///
 /// @return The current version of the Stela iOS app.
-Version stla_get_iOS_Stela_version();
+Version stla_get_iOS_Stela_version(void);
 
 /// Compare two versions.
 ///

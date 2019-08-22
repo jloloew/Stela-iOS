@@ -209,7 +209,7 @@ static const CGFloat kAddressHeight = 24.0f;
 
 - (void)updateAddress:(NSString *)newAddress {
 	self.addressField.text = newAddress;
-	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
 	appDelegate.currentURL = newAddress;
 }
 
@@ -306,7 +306,7 @@ static const CGFloat kAddressHeight = 24.0f;
 	[self updateButtons];
 	
 	// Save the new URL.
-	AppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
+	AppDelegate *appDelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
 	appDelegate.currentURL = [webView.URL absoluteString];
 	self.addressField.text = appDelegate.currentURL;
 }

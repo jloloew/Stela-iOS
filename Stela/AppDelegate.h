@@ -3,10 +3,14 @@
 //  Stela
 //
 //  Created by Justin Loew on 4/11/14.
-//  Copyright (c) 2014 Justin Loew. All rights reserved.
+//  Copyright (c) 2014-2019 Justin Loew. All rights reserved.
 //
 
 @import UIKit;
+
+
+/// The key used to save the URL currently open in the browser to @c NSUserDefaults.
+extern NSString *const kSTLASavedURLKey;
 
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
