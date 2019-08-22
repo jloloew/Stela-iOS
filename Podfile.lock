@@ -24,13 +24,21 @@ PODS:
   - PebbleKit (2.4)
 
 DEPENDENCIES:
-  - AFNetworking (~> 2.4)
-  - MBProgressHUD (~> 0.9)
-  - PebbleKit (~> 2.4)
+  - AFNetworking
+  - MBProgressHUD
+  - PebbleKit
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - AFNetworking
+    - MBProgressHUD
+    - PebbleKit
 
 SPEC CHECKSUMS:
   AFNetworking: 05edc0ac4c4c8cf57bcf4b84be5b0744b6d8e71e
   MBProgressHUD: c47f2c166c126cf2ce36498d80f33e754d4e93ad
   PebbleKit: e8650801927bd7272da83c8a21fb94d2af24465b
 
-COCOAPODS: 0.37.2
+PODFILE CHECKSUM: 88189fad782aaf40f02c0bf2ec8988e3309d9445
+
+COCOAPODS: 1.7.5
